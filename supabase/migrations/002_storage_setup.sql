@@ -1,5 +1,5 @@
 -- ============================================
--- Padely - Storage Setup for Avatars
+-- PadelTracker - Storage Setup for Avatars
 -- ============================================
 -- Run this in Supabase SQL Editor
 -- ============================================

@@ -1,6 +1,6 @@
-// Padely Service Worker for Push Notifications
+// PadelTracker Service Worker for Push Notifications
 
-const CACHE_NAME = 'padely-v1';
+const CACHE_NAME = 'padeltracker-v1';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -45,12 +45,12 @@ self.addEventListener('push', (event) => {
         ...data.data
       },
       actions: data.actions || [],
-      tag: data.tag || 'padely-notification',
+      tag: data.tag || 'padeltracker-notification',
       renotify: true,
     };
 
     event.waitUntil(
-      self.registration.showNotification(data.title || 'Padely', options)
+      self.registration.showNotification(data.title || 'PadelTracker', options)
     );
   } catch (error) {
     console.error('Error showing notification:', error);

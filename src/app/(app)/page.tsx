@@ -74,7 +74,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <Header title="Padely" />
+      <Header title="PadelTracker" />
       
       <div className="space-y-6 p-4">
         {/* Profile Summary Card */}
