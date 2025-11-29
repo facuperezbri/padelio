@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { startTransition, useOptimistic } from 'react'
+import { startTransition, useState, useEffect } from 'react'
 import { Home, History, Plus, Trophy, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -37,15 +37,27 @@ const navItems = [
 export function BottomNav() {
   const pathname = usePathname()
   const router = useRouter()
-  const [optimisticPath, setOptimisticPath] = useOptimistic(pathname)
+  const [optimisticPath, setOptimisticPath] = useState(pathname)
+
+  // Prefetch all routes immediately on mount (like React Router)
+  useEffect(() => {
+    navItems.forEach((item) => {
+      router.prefetch(item.href)
+    })
+  }, [router])
+
+  // Sync optimistic path with actual pathname when navigation completes
+  useEffect(() => {
+    setOptimisticPath(pathname)
+  }, [pathname])
 
   const handleNavigation = (href: string) => {
     if (pathname === href) return
     
-    // Optimistically update the UI immediately
+    // Immediately update UI optimistically (like React Router)
     setOptimisticPath(href)
     
-    // Use startTransition to make navigation feel instant
+    // Navigate in a transition (non-blocking) - routes are already prefetched
     startTransition(() => {
       router.push(href)
     })
