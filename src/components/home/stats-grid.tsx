@@ -1,29 +1,15 @@
-import { createClient } from '@/lib/supabase/server'
-import { Suspense } from 'react'
+'use client'
+
 import { Card, CardContent } from '@/components/ui/card'
 import { Swords, Trophy, Target, TrendingUp } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
+import { useData } from '@/contexts/data-context'
+import { AnimatedNumberSimple } from '@/components/ui/animated-number'
 
-async function StatsGridContent() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) return null
+export function StatsGrid() {
+  const { stats } = useData()
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
-  const { data: ranking } = await supabase
-    .from('global_ranking')
-    .select('rank')
-    .eq('id', user.id)
-    .single()
-
-  const winRate = profile?.matches_played 
-    ? Math.round((profile.matches_won / profile.matches_played) * 100) 
+  const winRate = stats.profile?.matches_played 
+    ? Math.round((stats.profile.matches_won / stats.profile.matches_played) * 100) 
     : 0
 
   return (
@@ -34,7 +20,12 @@ async function StatsGridContent() {
             <Swords className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <p className="text-2xl font-bold">{profile?.matches_played || 0}</p>
+            <p className="text-2xl font-bold">
+              <AnimatedNumberSimple 
+                value={stats.profile?.matches_played || 0} 
+                duration={800}
+              />
+            </p>
             <p className="text-xs text-muted-foreground">Partidos</p>
           </div>
         </CardContent>
@@ -46,7 +37,12 @@ async function StatsGridContent() {
             <Trophy className="h-5 w-5 text-green-500" />
           </div>
           <div>
-            <p className="text-2xl font-bold">{profile?.matches_won || 0}</p>
+            <p className="text-2xl font-bold">
+              <AnimatedNumberSimple 
+                value={stats.profile?.matches_won || 0} 
+                duration={800}
+              />
+            </p>
             <p className="text-xs text-muted-foreground">Victorias</p>
           </div>
         </CardContent>
@@ -58,7 +54,13 @@ async function StatsGridContent() {
             <Target className="h-5 w-5 text-blue-500" />
           </div>
           <div>
-            <p className="text-2xl font-bold">{winRate}%</p>
+            <p className="text-2xl font-bold">
+              <AnimatedNumberSimple 
+                value={winRate} 
+                duration={800}
+                suffix="%"
+              />
+            </p>
             <p className="text-xs text-muted-foreground">Win Rate</p>
           </div>
         </CardContent>
@@ -70,38 +72,22 @@ async function StatsGridContent() {
             <TrendingUp className="h-5 w-5 text-amber-500" />
           </div>
           <div>
-            <p className="text-2xl font-bold">#{ranking?.rank || '-'}</p>
+            <p className="text-2xl font-bold">
+              {stats.ranking !== null ? (
+                <AnimatedNumberSimple 
+                  value={stats.ranking} 
+                  duration={800}
+                  prefix="#"
+                />
+              ) : (
+                '-'
+              )}
+            </p>
             <p className="text-xs text-muted-foreground">Ranking</p>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-function StatsGridSkeleton() {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {[1, 2, 3, 4].map((i) => (
-        <Card key={i}>
-          <CardContent className="flex items-center gap-3 p-4">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <div className="space-y-1">
-              <Skeleton className="h-8 w-12" />
-              <Skeleton className="h-3 w-16" />
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
-}
-
-export function StatsGrid() {
-  return (
-    <Suspense fallback={<StatsGridSkeleton />}>
-      <StatsGridContent />
-    </Suspense>
   )
 }
 
