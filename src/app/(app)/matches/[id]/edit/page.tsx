@@ -263,8 +263,8 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
   function removeSet() {
     if (sets.length > 2) {
       setSets(sets.slice(0, -1));
-      setSetInputValues(setInputValues.slice(0, -1));
-      setSetErrors(setSetErrors.slice(0, -1));
+      setSetInputValues((prev) => prev.slice(0, -1));
+      setSetErrors((prev) => prev.slice(0, -1));
     }
   }
 
