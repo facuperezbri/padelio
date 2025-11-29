@@ -150,7 +150,7 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
     }
   }
 
-  function calculateWinner(): 1 | 2 | null {
+  useEffect(() => {
     let team1Sets = 0
     let team2Sets = 0
     
@@ -159,13 +159,7 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
       else if (set.team2 > set.team1) team2Sets++
     })
     
-    if (team1Sets > team2Sets) return 1
-    if (team2Sets > team1Sets) return 2
-    return null
-  }
-
-  useEffect(() => {
-    const winner = calculateWinner()
+    const winner: 1 | 2 | null = team1Sets > team2Sets ? 1 : team2Sets > team1Sets ? 2 : null
     setWinnerTeam(winner)
   }, [sets])
 

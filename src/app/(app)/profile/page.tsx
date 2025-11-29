@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Header } from '@/components/layout/header'
@@ -15,11 +15,7 @@ export default function ProfilePage() {
   const [ghostPlayers, setGhostPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadProfile()
-  }, [])
-
-  async function loadProfile() {
+  const loadProfile = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
@@ -48,7 +44,11 @@ export default function ProfilePage() {
 
     setGhostPlayers((ghosts || []) as Player[])
     setLoading(false)
-  }
+  }, [supabase, router])
+
+  useEffect(() => {
+    loadProfile()
+  }, [loadProfile])
 
   // Show header immediately, content loads asynchronously
   if (loading || !profile) {
