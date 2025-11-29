@@ -173,6 +173,7 @@ export default function NewMatchPage() {
   const pathname = usePathname();
   const supabase = createClient();
   const { registerConfirmHandler } = useNavigation();
+  const errorRef = useRef<HTMLDivElement>(null);
 
   // Check if there's unsaved data
   const hasUnsavedData = useCallback(() => {
@@ -229,6 +230,13 @@ export default function NewMatchPage() {
       registerConfirmHandler(null);
     };
   }, [handleNavigation, registerConfirmHandler]);
+
+  // Scroll to error when error appears
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
 
   // Intercept browser navigation (close tab/window)
   useEffect(() => {
@@ -673,7 +681,7 @@ export default function NewMatchPage() {
 
       <div className="space-y-6 p-4">
         {error && (
-          <Alert variant="destructive">
+          <Alert ref={errorRef} variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}

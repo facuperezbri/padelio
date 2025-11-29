@@ -302,7 +302,7 @@ BEGIN
   );
   
   -- Store ELO changes in match record
-  UPDATE matches SET elo_changes = elo_changes WHERE id = match_id;
+  UPDATE matches SET elo_changes = update_match_elos.elo_changes WHERE id = match_id;
   
   RETURN elo_changes;
 END;

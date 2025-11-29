@@ -29,7 +29,7 @@ import type { Match, MatchConfig, Player, SetScore } from "@/types/database";
 import { DEFAULT_MATCH_CONFIG } from "@/types/database";
 import { AlertTriangle, Check, Loader2, Trash2, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 
 interface EditMatchPageProps {
   params: Promise<{ id: string }>;
@@ -76,6 +76,7 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
 
   const router = useRouter();
   const supabase = createClient();
+  const errorRef = useRef<HTMLDivElement>(null);
 
   // Helper function to round time to nearest 00 or 30 minutes
   const roundTimeToNearestHalfHour = (timeString: string): string => {
@@ -323,6 +324,13 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
     }
   }, [sets, matchConfig.superTiebreak]);
 
+  // Scroll to error when error appears
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
+
   async function handleSave() {
     if (!match) {
       setError("Partido no encontrado");
@@ -447,7 +455,7 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
 
       <div className="space-y-6 p-4">
         {error && (
-          <Alert variant="destructive">
+          <Alert ref={errorRef} variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
