@@ -49,6 +49,7 @@ export function BottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className="group relative -mt-6 flex flex-col items-center"
               >
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/25 transition-transform group-active:scale-95">
@@ -65,6 +66,7 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={true}
               className={cn(
                 'touch-target flex flex-col items-center justify-center gap-1 px-3 py-2 transition-colors',
                 isActive ? 'text-primary' : 'text-muted-foreground'
