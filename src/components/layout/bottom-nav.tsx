@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { Home, History, Plus, Trophy, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useNavigation } from '@/contexts/navigation-context'
 
 const navItems = [
   {
@@ -37,6 +38,7 @@ const navItems = [
 export function BottomNav() {
   const pathname = usePathname()
   const router = useRouter()
+  const { handleNavigation: handleNavigationWithConfirm } = useNavigation()
 
   // Prefetch all routes immediately on mount (like React Router)
   useEffect(() => {
@@ -48,9 +50,10 @@ export function BottomNav() {
   const handleNavigation = (href: string) => {
     if (pathname === href) return
     
-    // Navigate first, then let Next.js handle the rest
-    // router.push triggers navigation immediately, UI updates via pathname
-    router.push(href)
+    // Use navigation context to check for unsaved data before navigating
+    handleNavigationWithConfirm(() => {
+      router.push(href)
+    })
   }
 
   return (

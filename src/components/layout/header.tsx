@@ -8,10 +8,19 @@ interface HeaderProps {
   title: string
   showBack?: boolean
   rightAction?: React.ReactNode
+  onBackClick?: () => void
 }
 
-export function Header({ title, showBack = false, rightAction }: HeaderProps) {
+export function Header({ title, showBack = false, rightAction, onBackClick }: HeaderProps) {
   const router = useRouter()
+
+  const handleBackClick = () => {
+    if (onBackClick) {
+      onBackClick()
+    } else {
+      router.back()
+    }
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-lg safe-area-inset-top">
@@ -22,7 +31,7 @@ export function Header({ title, showBack = false, rightAction }: HeaderProps) {
               variant="ghost"
               size="icon"
               className="touch-target -ml-2"
-              onClick={() => router.back()}
+              onClick={handleBackClick}
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>

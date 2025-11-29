@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useNavigation } from "@/contexts/navigation-context";
 import {
   canPlayThirdSet,
   getSetWinner,
@@ -62,8 +63,8 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type SelectedPlayer = Pick<
   Player,
@@ -161,12 +162,94 @@ export default function NewMatchPage() {
   const [createdMatchId, setCreatedMatchId] = useState<string | null>(null);
   const [invitations, setInvitations] = useState<MatchInvitation[]>([]);
 
+  // Navigation confirmation
+  const [showExitConfirmDialog, setShowExitConfirmDialog] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<
+    (() => void) | null
+  >(null);
   const router = useRouter();
+  const pathname = usePathname();
   const supabase = createClient();
+  const { registerConfirmHandler } = useNavigation();
+
+  // Check if there's unsaved data
+  const hasUnsavedData = useCallback(() => {
+    // Check if any players are selected
+    if (team1Player2 || team2Player1 || team2Player2) return true;
+
+    // Check if any sets have non-zero scores
+    const hasSetScores = sets.some((set) => set.team1 > 0 || set.team2 > 0);
+    if (hasSetScores) return true;
+
+    // Check if venue is filled
+    if (venue.trim() !== "") return true;
+
+    return false;
+  }, [team1Player2, team2Player1, team2Player2, sets, venue]);
+
+  // Handle navigation with confirmation
+  const handleNavigation = useCallback(
+    (navigationFn: () => void) => {
+      if (hasUnsavedData() && !success) {
+        setPendingNavigation(() => navigationFn);
+        setShowExitConfirmDialog(true);
+      } else {
+        navigationFn();
+      }
+    },
+    [hasUnsavedData, success]
+  );
+
+  // Confirm exit
+  const handleConfirmExit = () => {
+    if (pendingNavigation) {
+      pendingNavigation();
+      setPendingNavigation(null);
+    }
+    setShowExitConfirmDialog(false);
+  };
+
+  // Cancel exit
+  const handleCancelExit = () => {
+    setPendingNavigation(null);
+    setShowExitConfirmDialog(false);
+  };
 
   useEffect(() => {
     loadUserAndPlayers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Register navigation confirmation handler
+  useEffect(() => {
+    registerConfirmHandler(handleNavigation);
+    return () => {
+      registerConfirmHandler(null);
+    };
+  }, [handleNavigation, registerConfirmHandler]);
+
+  // Intercept browser navigation (close tab/window)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedData() && !success) {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasUnsavedData, success]);
+
+  // Intercept route changes - Note: This is a workaround for Next.js App Router
+  // The actual navigation interception happens in handleNavigation callback
+  useEffect(() => {
+    // We can't easily intercept router.push in App Router, so we rely on
+    // the Header's onBackClick and beforeunload events
+    // For BottomNav clicks, we'd need to modify BottomNav component
   }, []);
 
   async function loadUserAndPlayers() {
@@ -549,7 +632,11 @@ export default function NewMatchPage() {
   if (loading) {
     return (
       <>
-        <Header title="Nuevo Partido" showBack />
+        <Header
+          title="Nuevo Partido"
+          showBack
+          onBackClick={() => handleNavigation(() => router.back())}
+        />
         <div className="flex h-[60vh] items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -960,6 +1047,30 @@ export default function NewMatchPage() {
           venue={venue}
           onComplete={handleShareComplete}
         />
+
+        {/* Exit Confirmation Dialog */}
+        <Dialog
+          open={showExitConfirmDialog}
+          onOpenChange={setShowExitConfirmDialog}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>¿Salir sin guardar?</DialogTitle>
+              <DialogDescription>
+                Tenés datos sin guardar. Si salís ahora, perderás toda la
+                información del partido que estás cargando.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={handleCancelExit}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={handleConfirmExit}>
+                Salir sin guardar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
