@@ -17,13 +17,13 @@ const fontMono = {
 };
 
 export const metadata: Metadata = {
-  title: "PadelTracker",
+  title: "Padely",
   description: "Track your padel matches, calculate ELO rankings, and compete with friends",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "PadelTracker",
+    title: "Padely",
   },
   icons: {
     icon: [
