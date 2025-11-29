@@ -8,7 +8,7 @@
 -- 1. Add match_config column for Golden Point / Super Tie-break settings
 -- Config structure: { "goldenPoint": boolean, "superTiebreak": boolean }
 ALTER TABLE matches 
-ADD COLUMN IF NOT EXISTS match_config JSONB DEFAULT '{"goldenPoint": false, "superTiebreak": false}'::jsonb;
+ADD COLUMN IF NOT EXISTS match_config JSONB DEFAULT '{"goldenPoint": true, "superTiebreak": false}'::jsonb;
 
 -- 2. Add invite_token to match_invitations for shareable links
 ALTER TABLE match_invitations 

@@ -411,6 +411,6 @@ export const CATEGORIES: PlayerCategory[] = ['8va', '7ma', '6ta', '5ta', '4ta', 
 
 // Default match config
 export const DEFAULT_MATCH_CONFIG: MatchConfig = {
-  goldenPoint: false,
+  goldenPoint: true,
   superTiebreak: false,
 }
