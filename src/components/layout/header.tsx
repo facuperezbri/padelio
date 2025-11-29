@@ -1,26 +1,31 @@
-'use client'
+"use client";
 
-import { ChevronLeft } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface HeaderProps {
-  title: string
-  showBack?: boolean
-  rightAction?: React.ReactNode
-  onBackClick?: () => void
+  title: string;
+  showBack?: boolean;
+  rightAction?: React.ReactNode;
+  onBackClick?: () => void;
 }
 
-export function Header({ title, showBack = false, rightAction, onBackClick }: HeaderProps) {
-  const router = useRouter()
+export function Header({
+  title,
+  showBack = false,
+  rightAction,
+  onBackClick,
+}: HeaderProps) {
+  const router = useRouter();
 
   const handleBackClick = () => {
     if (onBackClick) {
-      onBackClick()
+      onBackClick();
     } else {
-      router.back()
+      router.back();
     }
-  }
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-lg safe-area-inset-top">
@@ -41,6 +46,5 @@ export function Header({ title, showBack = false, rightAction, onBackClick }: He
         {rightAction && <div>{rightAction}</div>}
       </div>
     </header>
-  )
+  );
 }
-

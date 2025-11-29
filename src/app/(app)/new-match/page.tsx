@@ -294,6 +294,43 @@ export default function NewMatchPage() {
       // Remove the profiles object
       delete (playerWithAvatar as any).profiles;
       setCurrentUser(playerWithAvatar as SelectedPlayer);
+    } else {
+      // If no player record exists, create one from profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select(
+          "id, username, full_name, avatar_url, elo_score, category_label"
+        )
+        .eq("id", user.id)
+        .single();
+
+      if (profile) {
+        // Create player record if it doesn't exist
+        const { data: newPlayer, error: createError } = await supabase
+          .from("players")
+          .insert({
+            profile_id: user.id,
+            display_name: profile.full_name || profile.username || "Usuario",
+            is_ghost: false,
+            elo_score: profile.elo_score || 1400,
+            category_label: profile.category_label || "6ta",
+          })
+          .select(
+            "id, display_name, is_ghost, elo_score, category_label, profile_id"
+          )
+          .single();
+
+        if (newPlayer && !createError) {
+          const playerWithAvatar: SelectedPlayer = {
+            ...newPlayer,
+            avatar_url: profile.avatar_url,
+          };
+          setCurrentUser(playerWithAvatar);
+        } else if (createError && createError.code !== "23505") {
+          // If error is not duplicate key, log it
+          console.error("Error creating player:", createError);
+        }
+      }
     }
 
     // Get available players (non-ghost public + user's ghosts) with avatars
@@ -802,26 +839,36 @@ export default function NewMatchPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {/* Current User (fixed) - Always Team 1 Player 1 */}
-              {currentUser && (
-                <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-                  <PlayerAvatar
-                    name={currentUser.display_name}
-                    avatarUrl={currentUser.avatar_url}
-                    size="md"
-                  />
-                  <div className="flex-1">
-                    <p className="font-medium">{currentUser.display_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Equipo 1 - Jugador 1
-                    </p>
-                  </div>
-                  <EloBadge
-                    elo={currentUser.elo_score}
-                    category={currentUser.category_label}
-                    size="sm"
-                  />
-                </div>
-              )}
+              <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+                {currentUser ? (
+                  <>
+                    <PlayerAvatar
+                      name={currentUser.display_name}
+                      avatarUrl={currentUser.avatar_url}
+                      size="md"
+                    />
+                    <div className="flex-1">
+                      <p className="font-medium">{currentUser.display_name}</p>
+                      <p className="text-xs text-muted-foreground">Equipo 1</p>
+                    </div>
+                    <EloBadge
+                      elo={currentUser.elo_score}
+                      category={currentUser.category_label}
+                      size="sm"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <PlayerAvatar name="Cargando..." size="md" />
+                    <div className="flex-1">
+                      <p className="font-medium text-muted-foreground">
+                        Cargando...
+                      </p>
+                      <p className="text-xs text-muted-foreground">Equipo 1</p>
+                    </div>
+                  </>
+                )}
+              </div>
 
               {/* Team 1 Player 2 */}
               <PlayerSlot
@@ -834,7 +881,7 @@ export default function NewMatchPage() {
                   setGhostPosition(pos);
                   setShowGhostDialog(true);
                 }}
-                label="Equipo 1 - Jugador 2"
+                label="Equipo 1 - Revés"
               />
             </CardContent>
           </Card>
@@ -867,7 +914,7 @@ export default function NewMatchPage() {
                   setGhostPosition(pos);
                   setShowGhostDialog(true);
                 }}
-                label="Equipo 2 - Jugador 1"
+                label="Equipo 2 - Drive"
               />
               <PlayerSlot
                 player={team2Player2}
@@ -879,7 +926,7 @@ export default function NewMatchPage() {
                   setGhostPosition(pos);
                   setShowGhostDialog(true);
                 }}
-                label="Equipo 2 - Jugador 2"
+                label="Equipo 2 - Revés"
               />
             </CardContent>
           </Card>
@@ -1188,7 +1235,11 @@ function PlayerSlot({
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
             <Plus className="h-5 w-5 text-muted-foreground" />
           </div>
-          <span className="text-muted-foreground">Seleccionar jugador</span>
+          <div className="flex-1 text-left">
+            <span className="text-muted-foreground">
+              {label ? `${label} - ` : ""}Seleccionar jugador
+            </span>
+          </div>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[80vh] p-0">
