@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
+  canPlayThirdSet,
   getSetWinner,
   isValidSetScore,
   validateMatch,
@@ -345,6 +346,16 @@ export default function NewMatchPage() {
 
     // Validate this set
     validateSet(setIndex, team, numValue);
+
+    // Auto-add third set if first two sets are won by different teams
+    if (newSets.length === 2 && canPlayThirdSet(newSets)) {
+      setSets([
+        ...newSets,
+        { team1: 0, team2: 0, isTiebreak: matchConfig.superTiebreak },
+      ]);
+      setSetInputValues([...newInputValues, { team1: "", team2: "" }]);
+      setSetErrors([...setErrors, {}]);
+    }
   }
 
   function handleSetScoreBlur(setIndex: number, team: "team1" | "team2") {
@@ -424,6 +435,13 @@ export default function NewMatchPage() {
     const winner: 1 | 2 | null =
       team1Sets > team2Sets ? 1 : team2Sets > team1Sets ? 2 : null;
     setWinnerTeam(winner);
+
+    // Remove third set if it exists but condition is no longer met
+    if (sets.length === 3 && !canPlayThirdSet(sets.slice(0, 2))) {
+      setSets(sets.slice(0, 2));
+      setSetInputValues((prev) => prev.slice(0, 2));
+      setSetErrors((prev) => prev.slice(0, 2));
+    }
   }, [sets, matchConfig.superTiebreak]);
 
   async function handleSubmit() {
