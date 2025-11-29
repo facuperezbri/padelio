@@ -125,7 +125,9 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <OAuthButtons onError={setError} />
+          <div className="mt-6">
+            <OAuthButtons onError={setError} />
+          </div>
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">¿No tenés cuenta? </span>

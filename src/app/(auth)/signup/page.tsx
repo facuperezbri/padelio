@@ -240,7 +240,11 @@ export default function SignupPage() {
             </form>
           )}
 
-          {!success && <OAuthButtons onError={setError} />}
+          {!success && (
+            <div className="mt-6">
+              <OAuthButtons onError={setError} />
+            </div>
+          )}
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">¿Ya tenés cuenta? </span>
