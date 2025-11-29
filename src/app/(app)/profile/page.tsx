@@ -138,16 +138,7 @@ export default function ProfilePage() {
     router.refresh()
   }
 
-  if (loading) {
-    return (
-      <>
-        <Header title="Perfil" />
-        <div className="flex h-[60vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </>
-    )
-  }
+  // Header always shows immediately
 
   const winRate = profile?.matches_played
     ? Math.round((profile.matches_won / profile.matches_played) * 100)
@@ -158,14 +149,45 @@ export default function ProfilePage() {
       <Header
         title="Perfil"
         rightAction={
-          <Button variant="ghost" size="icon" onClick={() => setEditMode(!editMode)}>
-            {editMode ? <Check className="h-5 w-5" /> : <Settings className="h-5 w-5" />}
-          </Button>
+          !loading && (
+            <Button variant="ghost" size="icon" onClick={() => setEditMode(!editMode)}>
+              {editMode ? <Check className="h-5 w-5" /> : <Settings className="h-5 w-5" />}
+            </Button>
+          )
         }
       />
 
       <div className="space-y-6 p-4">
-        {success && (
+        {loading ? (
+          <>
+            <Card className="overflow-hidden">
+              <div className="h-20 bg-gradient-to-r from-primary/20 via-primary/10 to-background" />
+              <CardContent className="-mt-10 pb-6">
+                <div className="flex flex-col items-center text-center">
+                  <div className="h-20 w-20 rounded-full bg-muted ring-4 ring-background animate-pulse" />
+                  <div className="mt-4 space-y-2">
+                    <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+                    <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                    <div className="h-8 w-20 bg-muted rounded animate-pulse" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <div className="grid grid-cols-3 gap-3">
+              {[1, 2, 3].map((i) => (
+                <Card key={i}>
+                  <CardContent className="flex flex-col items-center p-4">
+                    <div className="mb-2 h-5 w-5 bg-muted rounded animate-pulse" />
+                    <div className="mb-1 h-8 w-12 bg-muted rounded animate-pulse" />
+                    <div className="h-3 w-16 bg-muted rounded animate-pulse" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            {success && (
           <Alert>
             <AlertDescription className="flex items-center gap-2">
               <Check className="h-4 w-4" />
@@ -349,6 +371,8 @@ export default function ProfilePage() {
           <LogOut className="h-4 w-4" />
           Cerrar Sesión
         </Button>
+          </>
+        )}
       </div>
     </>
   )
