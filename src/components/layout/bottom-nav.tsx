@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { startTransition, useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Home, History, Plus, Trophy, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -37,7 +37,6 @@ const navItems = [
 export function BottomNav() {
   const pathname = usePathname()
   const router = useRouter()
-  const [optimisticPath, setOptimisticPath] = useState(pathname)
 
   // Prefetch all routes immediately on mount (like React Router)
   useEffect(() => {
@@ -46,32 +45,19 @@ export function BottomNav() {
     })
   }, [router])
 
-  // Sync optimistic path with actual pathname when navigation completes
-  useEffect(() => {
-    setOptimisticPath(pathname)
-  }, [pathname])
-
   const handleNavigation = (href: string) => {
     if (pathname === href) return
     
-    // Immediately update UI optimistically (synchronous state update)
-    // This makes the visual change instant, before any server round-trip
-    setOptimisticPath(href)
-    
-    // Use microtask to ensure state update is flushed before navigation
-    // This makes the UI change feel instant like React Router
-    Promise.resolve().then(() => {
-      startTransition(() => {
-        router.push(href)
-      })
-    })
+    // Navigate first, then let Next.js handle the rest
+    // router.push triggers navigation immediately, UI updates via pathname
+    router.push(href)
   }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/80 backdrop-blur-lg safe-area-inset-bottom">
       <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-2">
         {navItems.map((item) => {
-          const isActive = optimisticPath === item.href
+          const isActive = pathname === item.href
           const Icon = item.icon
 
           if (item.isAction) {
