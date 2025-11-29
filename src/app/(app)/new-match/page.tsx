@@ -74,7 +74,9 @@ type SelectedPlayer = Pick<
   | "elo_score"
   | "category_label"
   | "profile_id"
->;
+> & {
+  avatar_url?: string | null;
+};
 
 export default function NewMatchPage() {
   const [loading, setLoading] = useState(false);
@@ -265,30 +267,51 @@ export default function NewMatchPage() {
 
     setCurrentUserId(user.id);
 
-    // Get current user's player record
+    // Get current user's player record with avatar
     const { data: userPlayer } = await supabase
       .from("players")
       .select(
-        "id, display_name, is_ghost, elo_score, category_label, profile_id"
+        "id, display_name, is_ghost, elo_score, category_label, profile_id, profiles!left(avatar_url)"
       )
       .eq("profile_id", user.id)
       .single();
 
     if (userPlayer) {
-      setCurrentUser(userPlayer);
+      const playerWithAvatar = {
+        ...userPlayer,
+        avatar_url: Array.isArray(userPlayer.profiles)
+          ? (userPlayer.profiles[0] as any)?.avatar_url || null
+          : (userPlayer.profiles as any)?.avatar_url || null,
+      };
+      // Remove the profiles object
+      delete (playerWithAvatar as any).profiles;
+      setCurrentUser(playerWithAvatar as SelectedPlayer);
     }
 
-    // Get available players (non-ghost public + user's ghosts)
+    // Get available players (non-ghost public + user's ghosts) with avatars
     const { data: players } = await supabase
       .from("players")
       .select(
-        "id, display_name, is_ghost, elo_score, category_label, profile_id"
+        "id, display_name, is_ghost, elo_score, category_label, profile_id, profiles!left(avatar_url)"
       )
       .or(`is_ghost.eq.false,created_by_user_id.eq.${user.id}`)
       .neq("profile_id", user.id) // Exclude current user
       .order("display_name");
 
-    setAvailablePlayers(players || []);
+    // Map players to include avatar_url
+    const playersWithAvatars = (players || []).map((player) => {
+      const playerWithAvatar = {
+        ...player,
+        avatar_url: Array.isArray(player.profiles)
+          ? (player.profiles[0] as any)?.avatar_url || null
+          : (player.profiles as any)?.avatar_url || null,
+      };
+      // Remove the profiles object
+      delete (playerWithAvatar as any).profiles;
+      return playerWithAvatar;
+    });
+
+    setAvailablePlayers(playersWithAvatars as SelectedPlayer[]);
     setLoading(false);
   }
 
@@ -773,7 +796,11 @@ export default function NewMatchPage() {
               {/* Current User (fixed) */}
               {currentUser && (
                 <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-                  <PlayerAvatar name={currentUser.display_name} size="md" />
+                  <PlayerAvatar
+                    name={currentUser.display_name}
+                    avatarUrl={currentUser.avatar_url}
+                    size="md"
+                  />
                   <div className="flex-1">
                     <p className="font-medium">{currentUser.display_name}</p>
                     <p className="text-xs text-muted-foreground">Vos</p>
@@ -1109,6 +1136,7 @@ function PlayerSlot({
       <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
         <PlayerAvatar
           name={player.display_name}
+          avatarUrl={player.avatar_url}
           isGhost={player.is_ghost}
           size="md"
         />
@@ -1190,6 +1218,7 @@ function PlayerSlot({
                 >
                   <PlayerAvatar
                     name={p.display_name}
+                    avatarUrl={p.avatar_url}
                     isGhost={p.is_ghost}
                     size="sm"
                   />
