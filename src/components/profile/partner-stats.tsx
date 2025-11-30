@@ -47,10 +47,10 @@ export function PartnerStatsComponent({ playerId, filterPartnerId, limit, showVi
           setError('Error al cargar estadísticas de pareja')
           setStats([])
         } else {
-          let filteredData = data || []
+          let filteredData: PartnerStats[] = data || []
           // Filter to show only stats with specific partner if filterPartnerId is provided
           if (filterPartnerId) {
-            filteredData = filteredData.filter(stat => stat.partner_id === filterPartnerId)
+            filteredData = filteredData.filter((stat: PartnerStats) => stat.partner_id === filterPartnerId)
           }
           // Apply limit if provided
           if (limit && limit > 0) {
