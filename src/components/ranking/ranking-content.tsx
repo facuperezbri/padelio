@@ -12,6 +12,7 @@ import { Trophy, Medal, Award, Users } from 'lucide-react'
 import type { GlobalRanking, PlayerCategory } from '@/types/database'
 import { CATEGORIES, CATEGORY_LABELS } from '@/types/database'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PadelBallLoader } from '@/components/ui/padel-ball-loader'
 import { usePlayerIdByProfile } from '@/lib/react-query/hooks'
 
 interface RankingContentProps {
