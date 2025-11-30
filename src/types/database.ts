@@ -294,16 +294,12 @@ export interface Database {
         Args: { elo: number }
         Returns: PlayerCategory
       }
-      calculate_expected_score: {
-        Args: { player_elo: number; opponent_elo: number }
-        Returns: number
-      }
       calculate_new_elo: {
         Args: {
           current_elo: number
           opponent_avg_elo: number
           won: boolean
-          k_factor?: number
+          total_matches_played: number
         }
         Returns: number
       }

@@ -157,32 +157,39 @@ END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
 -- Function to calculate expected score (ELO formula)
-CREATE OR REPLACE FUNCTION calculate_expected_score(player_elo FLOAT, opponent_elo FLOAT)
-RETURNS FLOAT AS $$
-BEGIN
-  RETURN 1.0 / (1.0 + POWER(10, (opponent_elo - player_elo) / 400.0));
-END;
-$$ LANGUAGE plpgsql IMMUTABLE;
-
 -- Function to calculate new ELO after a match
--- K-factor is 32 for all players (can be adjusted)
+-- K-factor is dynamic: 64 for first 10 matches, 32 after that
 CREATE OR REPLACE FUNCTION calculate_new_elo(
   current_elo FLOAT,
   opponent_avg_elo FLOAT,
   won BOOLEAN,
-  k_factor FLOAT DEFAULT 32
+  total_matches_played INT
 )
 RETURNS FLOAT AS $$
 DECLARE
   expected FLOAT;
   actual FLOAT;
   new_elo FLOAT;
+  k_factor FLOAT;
 BEGIN
-  expected := calculate_expected_score(current_elo, opponent_avg_elo);
+  -- 1. Calcular probabilidad de victoria
+  expected := 1.0 / (1.0 + POWER(10, (opponent_avg_elo - current_elo) / 400.0));
+  
+  -- 2. Resultado real
   actual := CASE WHEN won THEN 1.0 ELSE 0.0 END;
+  
+  -- 3. Determinar K-Factor (Aceleración)
+  -- Si jugó menos de 10 partidos, K es 64 (doble velocidad). Si no, es 32.
+  IF total_matches_played < 10 THEN
+    k_factor := 64; 
+  ELSE
+    k_factor := 32;
+  END IF;
+  
+  -- 4. Calcular nuevo ELO
   new_elo := current_elo + k_factor * (actual - expected);
   
-  -- Minimum ELO of 100
+  -- Mínimo absoluto para no romper la escala
   RETURN GREATEST(new_elo, 100);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
@@ -196,6 +203,10 @@ DECLARE
   player2_elo FLOAT;
   player3_elo FLOAT;
   player4_elo FLOAT;
+  player1_matches INTEGER;
+  player2_matches INTEGER;
+  player3_matches INTEGER;
+  player4_matches INTEGER;
   team1_avg_elo FLOAT;
   team2_avg_elo FLOAT;
   new_elo1 FLOAT;
@@ -208,11 +219,18 @@ BEGIN
   -- Get match details
   SELECT * INTO match_record FROM matches WHERE id = match_id;
   
-  -- Get current ELOs
-  SELECT elo_score INTO player1_elo FROM players WHERE id = match_record.player_1_id;
-  SELECT elo_score INTO player2_elo FROM players WHERE id = match_record.player_2_id;
-  SELECT elo_score INTO player3_elo FROM players WHERE id = match_record.player_3_id;
-  SELECT elo_score INTO player4_elo FROM players WHERE id = match_record.player_4_id;
+  -- Get current ELOs and matches played
+  SELECT elo_score, matches_played INTO player1_elo, player1_matches 
+  FROM players WHERE id = match_record.player_1_id;
+  
+  SELECT elo_score, matches_played INTO player2_elo, player2_matches 
+  FROM players WHERE id = match_record.player_2_id;
+  
+  SELECT elo_score, matches_played INTO player3_elo, player3_matches 
+  FROM players WHERE id = match_record.player_3_id;
+  
+  SELECT elo_score, matches_played INTO player4_elo, player4_matches 
+  FROM players WHERE id = match_record.player_4_id;
   
   -- Calculate team averages
   team1_avg_elo := (player1_elo + player2_elo) / 2;
@@ -221,11 +239,11 @@ BEGIN
   -- Determine winner
   team1_won := match_record.winner_team = 1;
   
-  -- Calculate new ELOs
-  new_elo1 := calculate_new_elo(player1_elo, team2_avg_elo, team1_won);
-  new_elo2 := calculate_new_elo(player2_elo, team2_avg_elo, team1_won);
-  new_elo3 := calculate_new_elo(player3_elo, team1_avg_elo, NOT team1_won);
-  new_elo4 := calculate_new_elo(player4_elo, team1_avg_elo, NOT team1_won);
+  -- Calculate new ELOs with dynamic K-factor (pass total_matches_played BEFORE incrementing)
+  new_elo1 := calculate_new_elo(player1_elo, team2_avg_elo, team1_won, player1_matches);
+  new_elo2 := calculate_new_elo(player2_elo, team2_avg_elo, team1_won, player2_matches);
+  new_elo3 := calculate_new_elo(player3_elo, team1_avg_elo, NOT team1_won, player3_matches);
+  new_elo4 := calculate_new_elo(player4_elo, team1_avg_elo, NOT team1_won, player4_matches);
   
   -- Update players table
   UPDATE players SET 

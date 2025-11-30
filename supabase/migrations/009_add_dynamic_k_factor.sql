@@ -5,28 +5,33 @@ CREATE OR REPLACE FUNCTION calculate_new_elo(
   current_elo FLOAT,
   opponent_avg_elo FLOAT,
   won BOOLEAN,
-  matches_played INTEGER DEFAULT 0,
-  k_factor FLOAT DEFAULT 32
+  total_matches_played INT
 )
 RETURNS FLOAT AS $$
 DECLARE
   expected FLOAT;
   actual FLOAT;
   new_elo FLOAT;
-  dynamic_k FLOAT;
+  k_factor FLOAT;
 BEGIN
-  -- Double K-factor for first 10 matches (64 instead of 32)
-  IF matches_played < 10 THEN
-    dynamic_k := k_factor * 2;
+  -- 1. Calcular probabilidad de victoria
+  expected := 1.0 / (1.0 + POWER(10, (opponent_avg_elo - current_elo) / 400.0));
+  
+  -- 2. Resultado real
+  actual := CASE WHEN won THEN 1.0 ELSE 0.0 END;
+  
+  -- 3. Determinar K-Factor (Aceleración)
+  -- Si jugó menos de 10 partidos, K es 64 (doble velocidad). Si no, es 32.
+  IF total_matches_played < 10 THEN
+    k_factor := 64; 
   ELSE
-    dynamic_k := k_factor;
+    k_factor := 32;
   END IF;
   
-  expected := calculate_expected_score(current_elo, opponent_avg_elo);
-  actual := CASE WHEN won THEN 1.0 ELSE 0.0 END;
-  new_elo := current_elo + dynamic_k * (actual - expected);
+  -- 4. Calcular nuevo ELO
+  new_elo := current_elo + k_factor * (actual - expected);
   
-  -- Minimum ELO of 100
+  -- Mínimo absoluto para no romper la escala
   RETURN GREATEST(new_elo, 100);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
@@ -76,7 +81,7 @@ BEGIN
   -- Determine winner
   team1_won := match_record.winner_team = 1;
   
-  -- Calculate new ELOs with dynamic K-factor (pass matches_played BEFORE incrementing)
+  -- Calculate new ELOs with dynamic K-factor (pass total_matches_played BEFORE incrementing)
   new_elo1 := calculate_new_elo(player1_elo, team2_avg_elo, team1_won, player1_matches);
   new_elo2 := calculate_new_elo(player2_elo, team2_avg_elo, team1_won, player2_matches);
   new_elo3 := calculate_new_elo(player3_elo, team1_avg_elo, NOT team1_won, player3_matches);
