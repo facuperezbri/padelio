@@ -183,7 +183,6 @@ export function WhatsAppShareDialog({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
                       onClick={() => handleCopyLink(player)}
                       title="Copiar link"
                     >
@@ -196,7 +195,7 @@ export function WhatsAppShareDialog({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-green-600 hover:text-green-700"
+                      className="text-green-600 hover:text-green-700"
                       onClick={() => handleWhatsAppShare(player)}
                       title="Enviar por WhatsApp"
                     >

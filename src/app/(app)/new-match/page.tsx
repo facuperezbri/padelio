@@ -1373,12 +1373,7 @@ function PlayerSlot({
           category={player.category_label}
           size="sm"
         />
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => onRemove(position)}
-        >
+        <Button variant="ghost" size="icon" onClick={() => onRemove(position)}>
           <X className="h-4 w-4" />
         </Button>
       </div>

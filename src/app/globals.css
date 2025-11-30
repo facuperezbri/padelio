@@ -114,6 +114,37 @@ body {
   min-width: 44px;
 }
 
+/* Expand touch area - ensures minimum 44px clickable area */
+/* Note: This adds padding which will slightly increase visual size */
+/* For truly transparent expansion, would require component structure changes */
+.touch-area-expand-sm {
+  min-height: 44px;
+  /* h-8 = 32px, need 6px padding top/bottom: (44-32)/2 = 6px */
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.touch-area-expand-default {
+  min-height: 44px;
+  /* h-9 = 36px, need 4px padding top/bottom: (44-36)/2 = 4px */
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.touch-area-expand-icon {
+  min-height: 44px;
+  min-width: 44px;
+  /* h-9 w-9 = 36px, need 4px padding all sides: (44-36)/2 = 4px */
+  padding: 4px;
+}
+
+.touch-area-expand-switch {
+  min-height: 44px;
+  min-width: 44px;
+  /* h-5 = 20px, need 12px padding all sides: (44-20)/2 = 12px */
+  padding: 12px;
+}
+
 /* ELO change animations */
 @keyframes elo-up {
   0% {
