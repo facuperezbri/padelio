@@ -49,7 +49,9 @@ export async function updateSession(request: NextRequest) {
     url.pathname = '/login'
     const redirectResponse = NextResponse.redirect(url)
     // Copy cookies from supabaseResponse
-    redirectResponse.cookies.setAll(supabaseResponse.cookies.getAll())
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value)
+    })
     return redirectResponse
   }
 
@@ -59,7 +61,9 @@ export async function updateSession(request: NextRequest) {
     url.pathname = '/'
     const redirectResponse = NextResponse.redirect(url)
     // Copy cookies from supabaseResponse
-    redirectResponse.cookies.setAll(supabaseResponse.cookies.getAll())
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value)
+    })
     return redirectResponse
   }
 
@@ -87,7 +91,9 @@ export async function updateSession(request: NextRequest) {
       url.pathname = '/complete-profile'
       const redirectResponse = NextResponse.redirect(url)
       // Copy cookies from supabaseResponse
-      redirectResponse.cookies.setAll(supabaseResponse.cookies.getAll())
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value)
+      })
       return redirectResponse
     }
   }
