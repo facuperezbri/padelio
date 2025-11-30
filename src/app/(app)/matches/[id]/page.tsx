@@ -29,10 +29,10 @@ export default async function MatchDetailPage({ params }: MatchDetailProps) {
     .from('matches')
     .select(`
       *,
-      player_1:players!matches_player_1_id_fkey(*),
-      player_2:players!matches_player_2_id_fkey(*),
-      player_3:players!matches_player_3_id_fkey(*),
-      player_4:players!matches_player_4_id_fkey(*)
+      player_1:players!matches_player_1_id_fkey(*, profiles!left(avatar_url)),
+      player_2:players!matches_player_2_id_fkey(*, profiles!left(avatar_url)),
+      player_3:players!matches_player_3_id_fkey(*, profiles!left(avatar_url)),
+      player_4:players!matches_player_4_id_fkey(*, profiles!left(avatar_url))
     `)
     .eq('id', id)
     .single()
@@ -41,13 +41,22 @@ export default async function MatchDetailPage({ params }: MatchDetailProps) {
     notFound()
   }
 
+  // Helper function to extract avatar_url from profiles join
+  const getAvatarUrl = (player: any): string | null => {
+    if (player.is_ghost || !player.profile_id) return null
+    if (Array.isArray(player.profiles)) {
+      return player.profiles[0]?.avatar_url || null
+    }
+    return player.profiles?.avatar_url || null
+  }
+
   const scoreSets = match.score_sets as SetScore[]
   const eloChanges = match.elo_changes as EloChanges | null
   const matchConfig = match.match_config as MatchConfig | null
-  const player1 = match.player_1 as unknown as Player
-  const player2 = match.player_2 as unknown as Player
-  const player3 = match.player_3 as unknown as Player
-  const player4 = match.player_4 as unknown as Player
+  const player1 = { ...(match.player_1 as unknown as Player), avatar_url: getAvatarUrl(match.player_1) } as Player & { avatar_url?: string | null }
+  const player2 = { ...(match.player_2 as unknown as Player), avatar_url: getAvatarUrl(match.player_2) } as Player & { avatar_url?: string | null }
+  const player3 = { ...(match.player_3 as unknown as Player), avatar_url: getAvatarUrl(match.player_3) } as Player & { avatar_url?: string | null }
+  const player4 = { ...(match.player_4 as unknown as Player), avatar_url: getAvatarUrl(match.player_4) } as Player & { avatar_url?: string | null }
   
   const isCreator = match.created_by === user.id
 
@@ -197,11 +206,13 @@ interface PlayerRowProps {
 
 function PlayerRow({ player, eloChange, won }: PlayerRowProps) {
   const changeValue = eloChange?.change || 0
+  const avatarUrl = (player as Player & { avatar_url?: string | null }).avatar_url
 
   return (
     <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
       <PlayerAvatar
         name={player.display_name}
+        avatarUrl={avatarUrl}
         isGhost={player.is_ghost}
         size="md"
       />

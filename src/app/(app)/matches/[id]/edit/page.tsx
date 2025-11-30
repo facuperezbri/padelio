@@ -120,10 +120,10 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
       .select(
         `
         *,
-        player_1:players!matches_player_1_id_fkey(*),
-        player_2:players!matches_player_2_id_fkey(*),
-        player_3:players!matches_player_3_id_fkey(*),
-        player_4:players!matches_player_4_id_fkey(*)
+        player_1:players!matches_player_1_id_fkey(*, profiles!left(avatar_url)),
+        player_2:players!matches_player_2_id_fkey(*, profiles!left(avatar_url)),
+        player_3:players!matches_player_3_id_fkey(*, profiles!left(avatar_url)),
+        player_4:players!matches_player_4_id_fkey(*, profiles!left(avatar_url))
       `
       )
       .eq("id", id)
@@ -142,15 +142,36 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
       return;
     }
 
+    // Helper function to extract avatar_url from profiles join
+    const getAvatarUrl = (player: any): string | null => {
+      if (player.is_ghost || !player.profile_id) return null;
+      if (Array.isArray(player.profiles)) {
+        return player.profiles[0]?.avatar_url || null;
+      }
+      return player.profiles?.avatar_url || null;
+    };
+
     const fullMatch: MatchWithPlayers = {
       ...matchData,
       score_sets: matchData.score_sets as SetScore[],
       match_config:
         (matchData.match_config as MatchConfig) || DEFAULT_MATCH_CONFIG,
-      player_1: matchData.player_1 as unknown as Player,
-      player_2: matchData.player_2 as unknown as Player,
-      player_3: matchData.player_3 as unknown as Player,
-      player_4: matchData.player_4 as unknown as Player,
+      player_1: {
+        ...(matchData.player_1 as unknown as Player),
+        avatar_url: getAvatarUrl(matchData.player_1),
+      } as Player & { avatar_url?: string | null },
+      player_2: {
+        ...(matchData.player_2 as unknown as Player),
+        avatar_url: getAvatarUrl(matchData.player_2),
+      } as Player & { avatar_url?: string | null },
+      player_3: {
+        ...(matchData.player_3 as unknown as Player),
+        avatar_url: getAvatarUrl(matchData.player_3),
+      } as Player & { avatar_url?: string | null },
+      player_4: {
+        ...(matchData.player_4 as unknown as Player),
+        avatar_url: getAvatarUrl(matchData.player_4),
+      } as Player & { avatar_url?: string | null },
     };
 
     setMatch(fullMatch);
@@ -783,6 +804,9 @@ function PlayerRow({ player }: { player: Player }) {
     <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
       <PlayerAvatar
         name={player.display_name}
+        avatarUrl={
+          (player as Player & { avatar_url?: string | null }).avatar_url
+        }
         isGhost={player.is_ghost}
         size="md"
       />

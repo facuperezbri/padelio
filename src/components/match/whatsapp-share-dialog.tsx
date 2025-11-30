@@ -13,7 +13,9 @@ import { PlayerAvatar } from '@/components/ui/player-avatar'
 import { Check, Copy, MessageCircle, Share2, ExternalLink } from 'lucide-react'
 import type { Player, MatchInvitation } from '@/types/database'
 
-type SelectedPlayer = Pick<Player, 'id' | 'display_name' | 'is_ghost' | 'elo_score' | 'category_label' | 'profile_id'>
+type SelectedPlayer = Pick<Player, 'id' | 'display_name' | 'is_ghost' | 'elo_score' | 'category_label' | 'profile_id'> & {
+  avatar_url?: string | null
+}
 
 interface WhatsAppShareDialogProps {
   open: boolean
@@ -150,6 +152,7 @@ export function WhatsAppShareDialog({
                 >
                   <PlayerAvatar
                     name={player.display_name}
+                    avatarUrl={player.avatar_url}
                     isGhost={player.is_ghost}
                     size="sm"
                   />

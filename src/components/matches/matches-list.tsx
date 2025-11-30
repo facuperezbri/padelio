@@ -62,23 +62,46 @@ async function MatchesListContent() {
         score_sets,
         winner_team,
         elo_changes,
-        player_1:players!matches_player_1_id_fkey(id, display_name, is_ghost, elo_score, category_label),
-        player_2:players!matches_player_2_id_fkey(id, display_name, is_ghost, elo_score, category_label),
-        player_3:players!matches_player_3_id_fkey(id, display_name, is_ghost, elo_score, category_label),
-        player_4:players!matches_player_4_id_fkey(id, display_name, is_ghost, elo_score, category_label)
+        player_1:players!matches_player_1_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id, profiles!left(avatar_url)),
+        player_2:players!matches_player_2_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id, profiles!left(avatar_url)),
+        player_3:players!matches_player_3_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id, profiles!left(avatar_url)),
+        player_4:players!matches_player_4_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id, profiles!left(avatar_url))
       `)
       .or(orConditions)
       .order('match_date', { ascending: false })
 
-    matches = (data || []).map(m => ({
-      ...m,
-      score_sets: m.score_sets as SetScore[],
-      elo_changes: m.elo_changes as EloChanges | null,
-      player_1: m.player_1 as unknown as Player,
-      player_2: m.player_2 as unknown as Player,
-      player_3: m.player_3 as unknown as Player,
-      player_4: m.player_4 as unknown as Player,
-    }))
+    matches = (data || []).map(m => {
+      // Helper function to extract avatar_url from profiles join
+      const getAvatarUrl = (player: any): string | null => {
+        if (player.is_ghost || !player.profile_id) return null
+        if (Array.isArray(player.profiles)) {
+          return player.profiles[0]?.avatar_url || null
+        }
+        return player.profiles?.avatar_url || null
+      }
+
+      return {
+        ...m,
+        score_sets: m.score_sets as SetScore[],
+        elo_changes: m.elo_changes as EloChanges | null,
+        player_1: {
+          ...(m.player_1 as unknown as Player),
+          avatar_url: getAvatarUrl(m.player_1),
+        } as Player,
+        player_2: {
+          ...(m.player_2 as unknown as Player),
+          avatar_url: getAvatarUrl(m.player_2),
+        } as Player,
+        player_3: {
+          ...(m.player_3 as unknown as Player),
+          avatar_url: getAvatarUrl(m.player_3),
+        } as Player,
+        player_4: {
+          ...(m.player_4 as unknown as Player),
+          avatar_url: getAvatarUrl(m.player_4),
+        } as Player,
+      }
+    })
   }
 
   // Group matches by month
@@ -157,12 +180,14 @@ async function MatchesListContent() {
                               <div className="flex -space-x-2">
                                 <PlayerAvatar
                                   name={match.player_1.display_name}
+                                  avatarUrl={match.player_1.avatar_url}
                                   isGhost={match.player_1.is_ghost}
                                   size="sm"
                                   className="ring-2 ring-background"
                                 />
                                 <PlayerAvatar
                                   name={match.player_2.display_name}
+                                  avatarUrl={match.player_2.avatar_url}
                                   isGhost={match.player_2.is_ghost}
                                   size="sm"
                                   className="ring-2 ring-background"
@@ -172,12 +197,14 @@ async function MatchesListContent() {
                               <div className="flex -space-x-2">
                                 <PlayerAvatar
                                   name={match.player_3.display_name}
+                                  avatarUrl={match.player_3.avatar_url}
                                   isGhost={match.player_3.is_ghost}
                                   size="sm"
                                   className="ring-2 ring-background"
                                 />
                                 <PlayerAvatar
                                   name={match.player_4.display_name}
+                                  avatarUrl={match.player_4.avatar_url}
                                   isGhost={match.player_4.is_ghost}
                                   size="sm"
                                   className="ring-2 ring-background"
