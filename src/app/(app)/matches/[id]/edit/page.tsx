@@ -470,6 +470,8 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
     );
   }
 
+  //
+
   return (
     <>
       <Header title="Editar Partido" showBack />
