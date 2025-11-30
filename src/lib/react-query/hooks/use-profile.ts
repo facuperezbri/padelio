@@ -14,7 +14,11 @@ export function useProfile() {
   return useQuery({
     queryKey: ['profile'],
     queryFn: async (): Promise<ProfileData | null> => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError) {
+        throw authError
+      }
       
       if (!user) {
         return null
@@ -40,6 +44,10 @@ export function useProfile() {
           .eq('is_ghost', true)
           .order('display_name')
       ])
+
+      if (profileResult.error) {
+        throw profileResult.error
+      }
 
       const profile = profileResult.data as Profile | null
       const playerRecord = playerResult.data as Player | null

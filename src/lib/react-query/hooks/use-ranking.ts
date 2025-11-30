@@ -13,13 +13,21 @@ export function useRanking() {
   return useQuery({
     queryKey: ['ranking'],
     queryFn: async (): Promise<RankingData> => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
       
-      const { data: rankings } = await supabase
+      if (authError) {
+        throw authError
+      }
+      
+      const { data: rankings, error: rankingsError } = await supabase
         .from('global_ranking')
         .select('*')
         .order('elo_score', { ascending: false })
         .limit(100)
+
+      if (rankingsError) {
+        throw rankingsError
+      }
 
       return {
         rankings: (rankings || []) as GlobalRanking[],

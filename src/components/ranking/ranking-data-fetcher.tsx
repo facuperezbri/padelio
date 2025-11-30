@@ -5,7 +5,7 @@ import { RankingSkeleton } from './ranking-content'
 import { useRanking } from '@/lib/react-query/hooks'
 
 export function RankingContentWrapper() {
-  const { data, isLoading, error } = useRanking()
+  const { data, isLoading, error, isFetching } = useRanking()
 
   // Only show skeleton if we don't have data yet (first load)
   const shouldShowSkeleton = isLoading && !data
@@ -24,7 +24,11 @@ export function RankingContentWrapper() {
   }
 
   if (!data) {
-    return null
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <p className="text-sm text-muted-foreground">No hay datos disponibles</p>
+      </div>
+    )
   }
 
   // Show ranking even if currentUserId is null (for public viewing)
