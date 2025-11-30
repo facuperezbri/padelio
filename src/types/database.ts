@@ -386,7 +386,7 @@ export interface PartnerStats {
   won_matches: number;
   lost_matches: number;
   win_rate: number;
-  last_match_date: string;
+  last_match_date: string | null;
   current_streak: number;
 }
 

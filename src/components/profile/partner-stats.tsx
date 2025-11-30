@@ -10,9 +10,10 @@ import { useEffect, useState } from 'react'
 
 interface PartnerStatsProps {
   playerId: string | null
+  filterPartnerId?: string | null
 }
 
-export function PartnerStatsComponent({ playerId }: PartnerStatsProps) {
+export function PartnerStatsComponent({ playerId, filterPartnerId }: PartnerStatsProps) {
   const [stats, setStats] = useState<PartnerStats[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -41,7 +42,12 @@ export function PartnerStatsComponent({ playerId }: PartnerStatsProps) {
           setError('Error al cargar estadísticas de pareja')
           setStats([])
         } else {
-          setStats(data || [])
+          let filteredData = data || []
+          // Filter to show only stats with specific partner if filterPartnerId is provided
+          if (filterPartnerId) {
+            filteredData = filteredData.filter(stat => stat.partner_id === filterPartnerId)
+          }
+          setStats(filteredData)
         }
       } catch (err) {
         console.error('Unexpected error:', err)
@@ -95,20 +101,32 @@ export function PartnerStatsComponent({ playerId }: PartnerStatsProps) {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Users className="h-4 w-4" />
-            Química de Pareja
+            {filterPartnerId ? 'Química conmigo' : 'Química de Pareja'}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Aún no has jugado partidos con compañeros registrados.
+            {filterPartnerId 
+              ? 'Aún no han jugado partidos juntos.'
+              : 'Aún no has jugado partidos con compañeros registrados.'}
           </p>
         </CardContent>
       </Card>
     )
   }
 
-  function formatDate(dateString: string): string {
+  function formatDate(dateString: string | null | undefined): string {
+    if (!dateString) {
+      return 'N/A'
+    }
+    
     const date = new Date(dateString)
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return 'N/A'
+    }
+    
     const today = new Date()
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)

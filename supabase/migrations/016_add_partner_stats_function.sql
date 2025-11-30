@@ -5,6 +5,9 @@
 -- Analyzes match history and calculates win/loss stats with each partner
 -- ============================================
 
+-- Drop existing function if it exists (needed when changing return type)
+DROP FUNCTION IF EXISTS get_player_partner_stats(UUID);
+
 CREATE OR REPLACE FUNCTION get_player_partner_stats(target_player_id UUID)
 RETURNS TABLE (
   partner_id UUID,
@@ -14,7 +17,7 @@ RETURNS TABLE (
   won_matches INTEGER,
   lost_matches INTEGER,
   win_rate NUMERIC,
-  last_match_date DATE,
+  last_match_date TIMESTAMPTZ,
   current_streak INTEGER
 )
 LANGUAGE plpgsql
@@ -105,7 +108,7 @@ BEGIN
           ROUND((SUM(pm.won)::NUMERIC / COUNT(*)::NUMERIC) * 100, 2)
         ELSE 0 
       END AS win_rate,
-      MAX(pm.match_date) AS last_match_date
+      MAX(pm.match_date)::TIMESTAMPTZ AS last_match_date
     FROM partner_matches pm
     GROUP BY pm.partner_id
   )

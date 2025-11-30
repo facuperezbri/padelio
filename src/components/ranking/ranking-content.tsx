@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -163,6 +165,7 @@ function EmptyState() {
 
 interface RankingRowProps {
   rank: number
+  profileId: string
   name: string
   avatarUrl?: string | null
   elo: number
@@ -174,6 +177,7 @@ interface RankingRowProps {
 
 function RankingRow({
   rank,
+  profileId,
   name,
   avatarUrl,
   elo,
@@ -182,6 +186,93 @@ function RankingRow({
   winRate,
   isCurrentUser,
 }: RankingRowProps) {
+  const [playerId, setPlayerId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function getPlayerId() {
+      const { data } = await supabase
+        .from('players')
+        .select('id')
+        .eq('profile_id', profileId)
+        .eq('is_ghost', false)
+        .maybeSingle()
+      
+      if (data) {
+        setPlayerId(data.id)
+      }
+      setLoading(false)
+    }
+    
+    getPlayerId()
+  }, [profileId, supabase])
+
+  const getRankIcon = () => {
+    if (rank === 1) return <Trophy className="h-5 w-5 text-amber-500" />
+    if (rank === 2) return <Medal className="h-5 w-5 text-slate-400" />
+    if (rank === 3) return <Award className="h-5 w-5 text-amber-700" />
+    return (
+      <span className="flex h-5 w-5 items-center justify-center text-sm font-semibold text-muted-foreground">
+        {rank}
+      </span>
+    )
+  }
+
+  if (loading || !playerId) {
+    return (
+      <Card className={isCurrentUser ? 'ring-2 ring-primary' : ''}>
+        <CardContent className="flex items-center gap-3 p-3">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
+            {getRankIcon()}
+          </div>
+          <PlayerAvatar name={name} avatarUrl={avatarUrl} size="md" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="truncate font-medium">{name}</p>
+            </div>
+          </div>
+          <EloBadge elo={elo} category={category} size="sm" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Link href={`/player/${playerId}`}>
+      <Card className={`cursor-pointer transition-colors hover:bg-muted/50 ${isCurrentUser ? 'ring-2 ring-primary' : ''}`}>
+        <CardContent className="flex items-center gap-3 p-3">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
+            {getRankIcon()}
+          </div>
+          
+          <PlayerAvatar
+            name={name}
+            avatarUrl={avatarUrl}
+            size="md"
+          />
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="truncate font-medium">{name}</p>
+              <NewPlayerBadge matchesPlayed={matchesPlayed} />
+              {isCurrentUser && (
+                <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
+                  Vos
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {matchesPlayed} partidos · {winRate}% victorias
+            </p>
+          </div>
+          
+          <EloBadge elo={elo} category={category} size="sm" />
+        </CardContent>
+      </Card>
+    </Link>
+  )
+}
   const getRankIcon = () => {
     if (rank === 1) return <Trophy className="h-5 w-5 text-amber-500" />
     if (rank === 2) return <Medal className="h-5 w-5 text-slate-400" />

@@ -240,9 +240,10 @@ interface PlayerRowProps {
 function PlayerRow({ player, eloChange, won }: PlayerRowProps) {
   const changeValue = eloChange?.change || 0
   const avatarUrl = (player as Player & { avatar_url?: string | null }).avatar_url
+  const playerId = player.id
 
-  return (
-    <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+  const content = (
+    <div className={`flex items-center gap-3 rounded-lg bg-muted/50 p-3 ${!player.is_ghost && player.profile_id ? 'cursor-pointer transition-colors hover:bg-muted' : ''}`}>
       <PlayerAvatar
         name={player.display_name}
         avatarUrl={avatarUrl}
@@ -286,5 +287,16 @@ function PlayerRow({ player, eloChange, won }: PlayerRowProps) {
       </div>
     </div>
   )
+
+  // Only make clickable if player is not a ghost (has profile_id)
+  if (!player.is_ghost && player.profile_id) {
+    return (
+      <Link href={`/player/${playerId}`}>
+        {content}
+      </Link>
+    )
+  }
+
+  return content
 }
 
