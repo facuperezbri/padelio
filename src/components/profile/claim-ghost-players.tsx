@@ -10,7 +10,7 @@ import { EloBadge } from '@/components/ui/elo-badge'
 import { ScoreDisplay } from '@/components/match/score-display'
 import { Loader2, Search, Check, X, ChevronDown, ChevronUp, Calendar, MapPin, Trophy } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import type { SetScore } from '@/types/database'
+import type { SetScore, PlayerCategory } from '@/types/database'
 
 interface GhostPlayerMatch {
   id: string
@@ -29,7 +29,7 @@ interface ClaimableGhostPlayer {
   id: string
   display_name: string
   elo_score: number
-  category_label: string
+  category_label: PlayerCategory
   matches_played: number
   matches_won: number
   created_by_name: string
