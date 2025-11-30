@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PlayerAvatar } from '@/components/ui/player-avatar'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { createClient } from '@/lib/supabase/client'
+import { usePartnerStats } from '@/lib/react-query/hooks'
 import { PartnerStats } from '@/types/database'
 import { Users, Trophy, TrendingUp, TrendingDown, Calendar, Flame } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
 
 interface PartnerStatsProps {
@@ -19,56 +19,27 @@ interface PartnerStatsProps {
 }
 
 export function PartnerStatsComponent({ playerId, filterPartnerId, limit, showViewAllLink, initialLoading = false }: PartnerStatsProps) {
-  const [stats, setStats] = useState<PartnerStats[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const supabase = createClient()
+  const { data: allStats = [], isLoading, error: queryError } = usePartnerStats(playerId)
 
-  useEffect(() => {
-    async function loadPartnerStats() {
-      if (!playerId) {
-        setLoading(false)
-        return
-      }
-
-      setLoading(true)
-      setError(null)
-
-      try {
-        const { data, error: rpcError } = await supabase.rpc(
-          'get_player_partner_stats',
-          {
-            target_player_id: playerId,
-          }
-        )
-
-        if (rpcError) {
-          console.error('Error fetching partner stats:', rpcError)
-          setError('Error al cargar estadísticas de pareja')
-          setStats([])
-        } else {
-          let filteredData: PartnerStats[] = data || []
-          // Filter to show only stats with specific partner if filterPartnerId is provided
-          if (filterPartnerId) {
-            filteredData = filteredData.filter((stat: PartnerStats) => stat.partner_id === filterPartnerId)
-          }
-          // Apply limit if provided
-          if (limit && limit > 0) {
-            filteredData = filteredData.slice(0, limit)
-          }
-          setStats(filteredData)
-        }
-      } catch (err) {
-        console.error('Unexpected error:', err)
-        setError('Error inesperado al cargar estadísticas')
-        setStats([])
-      } finally {
-        setLoading(false)
-      }
+  // Filter and limit stats
+  const stats = useMemo(() => {
+    let filteredData: PartnerStats[] = allStats
+    
+    // Filter to show only stats with specific partner if filterPartnerId is provided
+    if (filterPartnerId) {
+      filteredData = filteredData.filter((stat: PartnerStats) => stat.partner_id === filterPartnerId)
     }
+    
+    // Apply limit if provided
+    if (limit && limit > 0) {
+      filteredData = filteredData.slice(0, limit)
+    }
+    
+    return filteredData
+  }, [allStats, filterPartnerId, limit])
 
-    loadPartnerStats()
-  }, [playerId, filterPartnerId, limit, supabase])
+  const loading = isLoading || initialLoading
+  const error = queryError ? 'Error al cargar estadísticas de pareja' : null
 
   if (loading || initialLoading) {
     const skeletonCount = limit && limit > 0 ? limit : 3

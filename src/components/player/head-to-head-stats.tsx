@@ -4,10 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PlayerAvatar } from '@/components/ui/player-avatar'
-import { createClient } from '@/lib/supabase/client'
-import { HeadToHeadStats } from '@/types/database'
+import { useHeadToHeadStats } from '@/lib/react-query/hooks'
 import { Swords, Trophy, Calendar, Flame, TrendingUp, TrendingDown } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
 interface HeadToHeadStatsProps {
@@ -19,7 +17,7 @@ interface HeadToHeadStatsProps {
   compact?: boolean
   title?: string
   showLink?: boolean
-  initialStats?: HeadToHeadStats | null
+  initialStats?: ReturnType<typeof useHeadToHeadStats>['data']
 }
 
 export function HeadToHeadStatsComponent({
@@ -33,58 +31,14 @@ export function HeadToHeadStatsComponent({
   showLink = true,
   initialStats,
 }: HeadToHeadStatsProps) {
-  const [stats, setStats] = useState<HeadToHeadStats | null>(initialStats ?? null)
-  const [loading, setLoading] = useState(!initialStats)
-  const [error, setError] = useState<string | null>(null)
-  const supabase = createClient()
+  // Use initialStats if provided, otherwise fetch
+  const { data: stats, isLoading: loading, error: queryError } = useHeadToHeadStats(
+    initialStats === undefined ? playerAId : null, // Only fetch if initialStats not provided
+    initialStats === undefined ? playerBId : null
+  )
 
-  useEffect(() => {
-    // If initialStats is provided, use them and skip the RPC call
-    if (initialStats !== undefined) {
-      setStats(initialStats)
-      setLoading(false)
-      return
-    }
-
-    async function loadHeadToHeadStats() {
-      if (!playerAId || !playerBId) {
-        setLoading(false)
-        return
-      }
-
-      setLoading(true)
-      setError(null)
-
-      try {
-        const { data, error: rpcError } = await supabase.rpc(
-          'get_head_to_head_stats',
-          {
-            player_a_id: playerAId,
-            player_b_id: playerBId,
-          }
-        )
-
-        if (rpcError) {
-          console.error('Error fetching head-to-head stats:', rpcError)
-          setError('Error al cargar estadísticas de enfrentamientos')
-          setStats(null)
-        } else if (data?.error) {
-          setError(data.error)
-          setStats(null)
-        } else {
-          setStats(data)
-        }
-      } catch (err) {
-        console.error('Unexpected error:', err)
-        setError('Error inesperado al cargar estadísticas')
-        setStats(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadHeadToHeadStats()
-  }, [playerAId, playerBId, supabase, initialStats])
+  const finalStats = initialStats ?? stats
+  const error = queryError ? 'Error al cargar estadísticas de enfrentamientos' : null
 
   function formatDate(dateString: string | null): string {
     if (!dateString) return 'N/A'
@@ -138,7 +92,7 @@ export function HeadToHeadStatsComponent({
     }
   }
 
-  if (loading) {
+  if (loading && initialStats === undefined) {
     return (
       <Card>
         <CardHeader className="pb-3">
@@ -173,7 +127,7 @@ export function HeadToHeadStatsComponent({
     )
   }
 
-  if (!stats || stats.total_matches === 0) {
+  if (!finalStats || finalStats.total_matches === 0) {
     return (
       <Card>
         <CardHeader className="pb-3">
@@ -191,11 +145,11 @@ export function HeadToHeadStatsComponent({
     )
   }
 
-  const playerAWinRate = stats.total_matches > 0
-    ? Math.round((stats.player_a_wins / stats.total_matches) * 100 * 10) / 10
+  const playerAWinRate = finalStats.total_matches > 0
+    ? Math.round((finalStats.player_a_wins / finalStats.total_matches) * 100 * 10) / 10
     : 0
 
-  const streakInfo = formatStreak(stats.current_streak)
+  const streakInfo = formatStreak(finalStats.current_streak)
 
   const content = (
     <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3 transition-colors hover:bg-muted cursor-pointer">
@@ -210,25 +164,25 @@ export function HeadToHeadStatsComponent({
         <div className="flex flex-col gap-1.5 mt-1">
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="outline" className="text-xs pl-0 border-0 bg-transparent">
-              {stats.total_matches} partidos
+              {finalStats.total_matches} partidos
             </Badge>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Trophy className="h-3 w-3 text-green-600" />
               <span className="font-medium text-green-600">
-                {stats.player_a_wins}
+                {finalStats.player_a_wins}
               </span>
               <span className="text-muted-foreground">-</span>
-              <span className="text-red-600">{stats.player_b_wins}</span>
+              <span className="text-red-600">{finalStats.player_b_wins}</span>
             </div>
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            {stats.last_match_date && (
+            {finalStats.last_match_date && (
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
-                <span>Último: {formatDate(stats.last_match_date)}</span>
+                <span>Último: {formatDate(finalStats.last_match_date)}</span>
               </div>
             )}
-            {stats.current_streak !== 0 && (
+            {finalStats.current_streak !== 0 && (
               <div className={`flex items-center gap-1 ${streakInfo.color}`}>
                 {streakInfo.icon === 'flame' ? (
                   <Flame className="h-3 w-3 fill-current" />

@@ -1,96 +1,17 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { PlayerAvatar } from '@/components/ui/player-avatar'
-import { createClient } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
+import { usePlayerMatches } from '@/lib/react-query/hooks'
 import { Trophy, Calendar, TrendingUp, TrendingDown } from 'lucide-react'
 import Link from 'next/link'
-import type { Match, Player } from '@/types/database'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface PlayerAllMatchesProps {
   playerId: string
 }
 
-interface MatchWithPlayers extends Match {
-  player_1: Player & { avatar_url?: string | null }
-  player_2: Player & { avatar_url?: string | null }
-  player_3: Player & { avatar_url?: string | null }
-  player_4: Player & { avatar_url?: string | null }
-}
-
 export function PlayerAllMatches({ playerId }: PlayerAllMatchesProps) {
-  const [matches, setMatches] = useState<MatchWithPlayers[]>([])
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
-
-  useEffect(() => {
-    async function loadMatches() {
-      setLoading(true)
-
-      // Get matches where player participated
-      const orConditions = `player_1_id.eq.${playerId},player_2_id.eq.${playerId},player_3_id.eq.${playerId},player_4_id.eq.${playerId}`
-      
-      const { data: matchesData } = await supabase
-        .from('matches')
-        .select(`
-          *,
-          player_1:players!matches_player_1_id_fkey(*),
-          player_2:players!matches_player_2_id_fkey(*),
-          player_3:players!matches_player_3_id_fkey(*),
-          player_4:players!matches_player_4_id_fkey(*)
-        `)
-        .or(orConditions)
-        .order('match_date', { ascending: false })
-
-      if (matchesData) {
-        // Get avatars for all players
-        const profileIds = new Set<string>()
-        matchesData.forEach(match => {
-          const players = [match.player_1, match.player_2, match.player_3, match.player_4] as any[]
-          players.forEach(player => {
-            if (player?.profile_id && !player.is_ghost) {
-              profileIds.add(player.profile_id)
-            }
-          })
-        })
-
-        let avatarsMap: Record<string, string | null> = {}
-        if (profileIds.size > 0) {
-          const { data: profiles } = await supabase
-            .from('profiles')
-            .select('id, avatar_url')
-            .in('id', Array.from(profileIds))
-
-          if (profiles) {
-            profiles.forEach(profile => {
-              avatarsMap[profile.id] = profile.avatar_url
-            })
-          }
-        }
-
-        const getAvatarUrl = (player: any): string | null => {
-          if (player.is_ghost || !player.profile_id) return null
-          return avatarsMap[player.profile_id] || null
-        }
-
-        const matchesWithAvatars = matchesData.map(match => ({
-          ...match,
-          player_1: { ...match.player_1, avatar_url: getAvatarUrl(match.player_1) },
-          player_2: { ...match.player_2, avatar_url: getAvatarUrl(match.player_2) },
-          player_3: { ...match.player_3, avatar_url: getAvatarUrl(match.player_3) },
-          player_4: { ...match.player_4, avatar_url: getAvatarUrl(match.player_4) },
-        })) as MatchWithPlayers[]
-
-        setMatches(matchesWithAvatars)
-      }
-
-      setLoading(false)
-    }
-
-    loadMatches()
-  }, [playerId, supabase])
+  const { data: matches = [], isLoading: loading } = usePlayerMatches(playerId)
 
   if (loading) {
     return (

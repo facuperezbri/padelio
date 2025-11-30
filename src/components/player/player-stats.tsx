@@ -2,52 +2,15 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Trophy, TrendingUp } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
+import { usePlayerStats } from '@/lib/react-query/hooks'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface PlayerStatsProps {
   playerId: string
 }
 
-interface Stats {
-  matches_played: number
-  matches_won: number
-  win_rate: number
-}
-
 export function PlayerStats({ playerId }: PlayerStatsProps) {
-  const [stats, setStats] = useState<Stats | null>(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
-
-  useEffect(() => {
-    async function loadStats() {
-      setLoading(true)
-      
-      const { data: player } = await supabase
-        .from('players')
-        .select('matches_played, matches_won')
-        .eq('id', playerId)
-        .single()
-
-      if (player) {
-        const winRate = player.matches_played > 0
-          ? Math.round((player.matches_won / player.matches_played) * 100 * 10) / 10
-          : 0
-
-        setStats({
-          matches_played: player.matches_played || 0,
-          matches_won: player.matches_won || 0,
-          win_rate: winRate
-        })
-      }
-      
-      setLoading(false)
-    }
-
-    loadStats()
-  }, [playerId, supabase])
+  const { data: stats, isLoading: loading } = usePlayerStats(playerId)
 
   if (loading) {
     return (

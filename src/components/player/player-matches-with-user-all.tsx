@@ -1,109 +1,32 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { createClient } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
-import { Trophy, Calendar, TrendingUp, TrendingDown } from 'lucide-react'
+import { usePlayerMatches } from '@/lib/react-query/hooks'
+import { Trophy, Calendar, TrendingDown } from 'lucide-react'
 import Link from 'next/link'
-import type { Match, Player } from '@/types/database'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useMemo } from 'react'
 
 interface PlayerMatchesWithUserAllProps {
   targetPlayerId: string
   otherPlayerId: string
 }
 
-interface MatchWithPlayers extends Match {
-  player_1: Player & { avatar_url?: string | null }
-  player_2: Player & { avatar_url?: string | null }
-  player_3: Player & { avatar_url?: string | null }
-  player_4: Player & { avatar_url?: string | null }
-}
-
 export function PlayerMatchesWithUserAll({ targetPlayerId, otherPlayerId }: PlayerMatchesWithUserAllProps) {
-  const [matches, setMatches] = useState<MatchWithPlayers[]>([])
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const { data: allMatches = [], isLoading: loading } = usePlayerMatches(targetPlayerId)
 
-  useEffect(() => {
-    async function loadMatches() {
-      setLoading(true)
-
-      // Get matches where target player participated
-      const orConditions = `player_1_id.eq.${targetPlayerId},player_2_id.eq.${targetPlayerId},player_3_id.eq.${targetPlayerId},player_4_id.eq.${targetPlayerId}`
-      
-      const { data: matchesData } = await supabase
-        .from('matches')
-        .select(`
-          *,
-          player_1:players!matches_player_1_id_fkey(*),
-          player_2:players!matches_player_2_id_fkey(*),
-          player_3:players!matches_player_3_id_fkey(*),
-          player_4:players!matches_player_4_id_fkey(*)
-        `)
-        .or(orConditions)
-        .order('match_date', { ascending: false })
-
-      // Filter matches where both players participated together
-      const filteredMatches = matchesData?.filter(match => {
-        const playerIds = [
-          match.player_1_id,
-          match.player_2_id,
-          match.player_3_id,
-          match.player_4_id
-        ]
-        return playerIds.includes(targetPlayerId) && playerIds.includes(otherPlayerId)
-      }) || []
-
-      if (filteredMatches.length > 0) {
-        // Get avatars for all players
-        const profileIds = new Set<string>()
-        filteredMatches.forEach(match => {
-          const players = [match.player_1, match.player_2, match.player_3, match.player_4] as any[]
-          players.forEach(player => {
-            if (player?.profile_id && !player.is_ghost) {
-              profileIds.add(player.profile_id)
-            }
-          })
-        })
-
-        let avatarsMap: Record<string, string | null> = {}
-        if (profileIds.size > 0) {
-          const { data: profiles } = await supabase
-            .from('profiles')
-            .select('id, avatar_url')
-            .in('id', Array.from(profileIds))
-
-          if (profiles) {
-            profiles.forEach(profile => {
-              avatarsMap[profile.id] = profile.avatar_url
-            })
-          }
-        }
-
-        const getAvatarUrl = (player: any): string | null => {
-          if (player.is_ghost || !player.profile_id) return null
-          return avatarsMap[player.profile_id] || null
-        }
-
-        const matchesWithAvatars = filteredMatches.map(match => ({
-          ...match,
-          player_1: { ...match.player_1, avatar_url: getAvatarUrl(match.player_1) },
-          player_2: { ...match.player_2, avatar_url: getAvatarUrl(match.player_2) },
-          player_3: { ...match.player_3, avatar_url: getAvatarUrl(match.player_3) },
-          player_4: { ...match.player_4, avatar_url: getAvatarUrl(match.player_4) },
-        })) as MatchWithPlayers[]
-
-        setMatches(matchesWithAvatars)
-      } else {
-        setMatches([])
-      }
-
-      setLoading(false)
-    }
-
-    loadMatches()
-  }, [targetPlayerId, otherPlayerId, supabase])
+  // Filter matches where both players participated together
+  const matches = useMemo(() => {
+    return allMatches.filter(match => {
+      const playerIds = [
+        match.player_1_id,
+        match.player_2_id,
+        match.player_3_id,
+        match.player_4_id
+      ]
+      return playerIds.includes(targetPlayerId) && playerIds.includes(otherPlayerId)
+    })
+  }, [allMatches, targetPlayerId, otherPlayerId])
 
   if (loading) {
     return (
