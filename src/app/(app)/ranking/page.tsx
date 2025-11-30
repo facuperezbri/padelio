@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Header } from '@/components/layout/header'
-import { RankingContentWrapper } from '@/components/ranking/ranking-content'
+import { RankingContentWrapper } from '@/components/ranking/ranking-data-fetcher'
 
 export default async function RankingPage() {
   const supabase = await createClient()

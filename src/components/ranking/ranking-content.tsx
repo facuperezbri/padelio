@@ -1,59 +1,45 @@
-import { createClient } from '@/lib/supabase/server'
-import { Suspense } from 'react'
+"use client"
+
+import { useState, useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PlayerAvatar } from '@/components/ui/player-avatar'
 import { EloBadge } from '@/components/ui/elo-badge'
 import { NewPlayerBadge } from '@/components/ui/new-player-badge'
 import { Trophy, Medal, Award, Users } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
 import type { GlobalRanking, PlayerCategory } from '@/types/database'
+import { CATEGORIES, CATEGORY_LABELS } from '@/types/database'
+import { Skeleton } from '@/components/ui/skeleton'
 
-async function RankingContent() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) return null
+interface RankingContentProps {
+  rankings: GlobalRanking[]
+  currentUserId: string
+}
 
-  const { data: rankings } = await supabase
-    .from('global_ranking')
-    .select('*')
-    .order('elo_score', { ascending: false })
-    .limit(100)
+export function RankingContent({ rankings, currentUserId }: RankingContentProps) {
+  const [selectedGender, setSelectedGender] = useState<'masculino' | 'femenino'>('masculino')
+  const [selectedCategory, setSelectedCategory] = useState<PlayerCategory | 'all'>('all')
 
-  const globalRankings = (rankings || []) as GlobalRanking[]
+  // Filter rankings by gender and category
+  const filteredRankings = useMemo(() => {
+    let filtered = rankings.filter(player => {
+      // Filter by gender
+      if (selectedGender === 'masculino' && player.gender !== 'Masculino') return false
+      if (selectedGender === 'femenino' && player.gender !== 'Femenino') return false
+      
+      // Filter by category
+      if (selectedCategory !== 'all' && player.category_label !== selectedCategory) return false
+      
+      return true
+    })
 
-  // Get all players
-  const { data: allPlayers } = await supabase
-    .from('player_stats')
-    .select('*')
-    .gt('matches_played', 0)
-    .order('elo_score', { ascending: false })
-    .limit(100)
+    // Sort by elo_score descending
+    return filtered.sort((a, b) => b.elo_score - a.elo_score)
+  }, [rankings, selectedGender, selectedCategory])
 
-  // Get avatar URLs for registered players (non-ghost with profile_id)
-  const profileIds = new Set<string>()
-  allPlayers?.forEach(player => {
-    if (player.profile_id && !player.is_ghost) {
-      profileIds.add(player.profile_id)
-    }
-  })
-
-  let avatarsMap: Record<string, string | null> = {}
-  if (profileIds.size > 0) {
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, avatar_url')
-      .in('id', Array.from(profileIds))
-
-    if (profiles) {
-      profiles.forEach(profile => {
-        avatarsMap[profile.id] = profile.avatar_url
-      })
-    }
-  }
-
-  const userRank = globalRankings.find(r => r.id === user.id)
+  const userRankIndex = filteredRankings.findIndex(r => r.id === currentUserId)
+  const userRank = userRankIndex !== -1 ? filteredRankings[userRankIndex] : null
 
   return (
     <>
@@ -63,7 +49,7 @@ async function RankingContent() {
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/20">
                 <span className="text-2xl font-bold text-primary">
-                  #{userRank.rank}
+                  #{userRankIndex + 1}
                 </span>
               </div>
               <div className="flex-1">
@@ -84,23 +70,44 @@ async function RankingContent() {
         </Card>
       )}
 
-      <Tabs defaultValue="registered" className="w-full">
+      {/* Category Filter */}
+      <div className="mb-4">
+        <Select
+          value={selectedCategory}
+          onValueChange={(value) => setSelectedCategory(value as PlayerCategory | 'all')}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Todas las categorías" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas las categorías</SelectItem>
+            {CATEGORIES.map((category) => (
+              <SelectItem key={category} value={category}>
+                {CATEGORY_LABELS[category]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Gender Tabs */}
+      <Tabs value={selectedGender} onValueChange={(value) => setSelectedGender(value as 'masculino' | 'femenino')} className="w-full">
         <TabsList className="mb-4 grid w-full grid-cols-2">
-          <TabsTrigger value="registered" className="gap-2">
+          <TabsTrigger value="masculino" className="gap-2">
             <Users className="h-4 w-4" />
-            Registrados
+            Masculino
           </TabsTrigger>
-          <TabsTrigger value="all" className="gap-2">
-            <Trophy className="h-4 w-4" />
-            Todos
+          <TabsTrigger value="femenino" className="gap-2">
+            <Users className="h-4 w-4" />
+            Femenino
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="registered" className="space-y-2">
-          {globalRankings.length === 0 ? (
+        <TabsContent value="masculino" className="space-y-2">
+          {filteredRankings.length === 0 ? (
             <EmptyState />
           ) : (
-            globalRankings.map((player, index) => (
+            filteredRankings.map((player, index) => (
               <RankingRow
                 key={player.id}
                 rank={index + 1}
@@ -110,37 +117,29 @@ async function RankingContent() {
                 category={player.category_label}
                 matchesPlayed={player.matches_played}
                 winRate={player.win_rate}
-                isCurrentUser={player.id === user.id}
+                isCurrentUser={player.id === currentUserId}
               />
             ))
           )}
         </TabsContent>
 
-        <TabsContent value="all" className="space-y-2">
-          {!allPlayers || allPlayers.length === 0 ? (
+        <TabsContent value="femenino" className="space-y-2">
+          {filteredRankings.length === 0 ? (
             <EmptyState />
           ) : (
-            allPlayers.map((player, index) => {
-              // Get avatar_url from the map for registered players
-              const avatarUrl = player.profile_id && !player.is_ghost
-                ? avatarsMap[player.profile_id] || null
-                : null
-              
-              return (
-                <RankingRow
-                  key={player.id}
-                  rank={index + 1}
-                  name={player.display_name}
-                  avatarUrl={avatarUrl}
-                  isGhost={player.is_ghost}
-                  elo={player.elo_score}
-                  category={player.category_label}
-                  matchesPlayed={player.matches_played}
-                  winRate={player.win_rate}
-                  isCurrentUser={player.profile_id === user.id}
-                />
-              )
-            })
+            filteredRankings.map((player, index) => (
+              <RankingRow
+                key={player.id}
+                rank={index + 1}
+                name={player.full_name || player.username || 'Usuario'}
+                avatarUrl={player.avatar_url}
+                elo={player.elo_score}
+                category={player.category_label}
+                matchesPlayed={player.matches_played}
+                winRate={player.win_rate}
+                isCurrentUser={player.id === currentUserId}
+              />
+            ))
           )}
         </TabsContent>
       </Tabs>
@@ -148,7 +147,87 @@ async function RankingContent() {
   )
 }
 
-function RankingSkeleton() {
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+        <Trophy className="h-8 w-8 text-muted-foreground" />
+      </div>
+      <h2 className="mb-2 text-lg font-semibold">Sin ranking aún</h2>
+      <p className="text-sm text-muted-foreground">
+        Registrá partidos para aparecer en el ranking
+      </p>
+    </div>
+  )
+}
+
+interface RankingRowProps {
+  rank: number
+  name: string
+  avatarUrl?: string | null
+  elo: number
+  category: PlayerCategory
+  matchesPlayed: number
+  winRate: number
+  isCurrentUser?: boolean
+}
+
+function RankingRow({
+  rank,
+  name,
+  avatarUrl,
+  elo,
+  category,
+  matchesPlayed,
+  winRate,
+  isCurrentUser,
+}: RankingRowProps) {
+  const getRankIcon = () => {
+    if (rank === 1) return <Trophy className="h-5 w-5 text-amber-500" />
+    if (rank === 2) return <Medal className="h-5 w-5 text-slate-400" />
+    if (rank === 3) return <Award className="h-5 w-5 text-amber-700" />
+    return (
+      <span className="flex h-5 w-5 items-center justify-center text-sm font-semibold text-muted-foreground">
+        {rank}
+      </span>
+    )
+  }
+
+  return (
+    <Card className={isCurrentUser ? 'ring-2 ring-primary' : ''}>
+      <CardContent className="flex items-center gap-3 p-3">
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
+          {getRankIcon()}
+        </div>
+        
+        <PlayerAvatar
+          name={name}
+          avatarUrl={avatarUrl}
+          size="md"
+        />
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="truncate font-medium">{name}</p>
+            <NewPlayerBadge matchesPlayed={matchesPlayed} />
+            {isCurrentUser && (
+              <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
+                Vos
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {matchesPlayed} partidos · {winRate}% victorias
+          </p>
+        </div>
+        
+        <EloBadge elo={elo} category={category} size="sm" />
+      </CardContent>
+    </Card>
+  )
+}
+
+export function RankingSkeleton() {
   return (
     <>
       <Card className="mb-6 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-background">
@@ -189,100 +268,6 @@ function RankingSkeleton() {
         ))}
       </div>
     </>
-  )
-}
-
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-        <Trophy className="h-8 w-8 text-muted-foreground" />
-      </div>
-      <h2 className="mb-2 text-lg font-semibold">Sin ranking aún</h2>
-      <p className="text-sm text-muted-foreground">
-        Registrá partidos para aparecer en el ranking
-      </p>
-    </div>
-  )
-}
-
-interface RankingRowProps {
-  rank: number
-  name: string
-  avatarUrl?: string | null
-  isGhost?: boolean
-  elo: number
-  category: PlayerCategory
-  matchesPlayed: number
-  winRate: number
-  isCurrentUser?: boolean
-}
-
-function RankingRow({
-  rank,
-  name,
-  avatarUrl,
-  isGhost,
-  elo,
-  category,
-  matchesPlayed,
-  winRate,
-  isCurrentUser,
-}: RankingRowProps) {
-  const getRankIcon = () => {
-    if (rank === 1) return <Trophy className="h-5 w-5 text-amber-500" />
-    if (rank === 2) return <Medal className="h-5 w-5 text-slate-400" />
-    if (rank === 3) return <Award className="h-5 w-5 text-amber-700" />
-    return (
-      <span className="flex h-5 w-5 items-center justify-center text-sm font-semibold text-muted-foreground">
-        {rank}
-      </span>
-    )
-  }
-
-  return (
-    <Card className={isCurrentUser ? 'ring-2 ring-primary' : ''}>
-      <CardContent className="flex items-center gap-3 p-3">
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
-          {getRankIcon()}
-        </div>
-        
-        <PlayerAvatar
-          name={name}
-          avatarUrl={avatarUrl}
-          isGhost={isGhost}
-          size="md"
-        />
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="truncate font-medium">{name}</p>
-            {isGhost && (
-              <span className="text-xs text-muted-foreground">(Invitado)</span>
-            )}
-            <NewPlayerBadge matchesPlayed={matchesPlayed} />
-            {isCurrentUser && (
-              <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
-                Vos
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {matchesPlayed} partidos · {winRate}% victorias
-          </p>
-        </div>
-        
-        <EloBadge elo={elo} category={category} size="sm" />
-      </CardContent>
-    </Card>
-  )
-}
-
-export function RankingContentWrapper() {
-  return (
-    <Suspense fallback={<RankingSkeleton />}>
-      <RankingContent />
-    </Suspense>
   )
 }
 
