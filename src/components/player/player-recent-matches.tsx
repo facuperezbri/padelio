@@ -12,7 +12,10 @@ interface PlayerRecentMatchesProps {
 }
 
 export function PlayerRecentMatches({ playerId }: PlayerRecentMatchesProps) {
-  const { data: matches = [], isLoading: loading } = usePlayerMatches(playerId, 10)
+  const { data: matches = [], isLoading } = usePlayerMatches(playerId, 10)
+
+  // Only show skeleton if we don't have data yet (first load)
+  const loading = isLoading && matches.length === 0
 
   if (loading) {
     return (

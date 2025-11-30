@@ -4,4 +4,7 @@ export { usePartnerStats } from './use-partner-stats'
 export { useMostFrequentOpponent } from './use-most-frequent-opponent'
 export { usePlayerStats } from './use-player-stats'
 export { usePlayerMatches, type MatchWithPlayers } from './use-player-matches'
+export { useRanking } from './use-ranking'
+export { useProfile } from './use-profile'
+export { usePlayerIdByProfile } from './use-player-id-by-profile'
 

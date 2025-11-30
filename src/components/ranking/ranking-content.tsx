@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -13,10 +12,11 @@ import { Trophy, Medal, Award, Users } from 'lucide-react'
 import type { GlobalRanking, PlayerCategory } from '@/types/database'
 import { CATEGORIES, CATEGORY_LABELS } from '@/types/database'
 import { Skeleton } from '@/components/ui/skeleton'
+import { usePlayerIdByProfile } from '@/lib/react-query/hooks'
 
 interface RankingContentProps {
   rankings: GlobalRanking[]
-  currentUserId: string
+  currentUserId: string | null
 }
 
 export function RankingContent({ rankings, currentUserId }: RankingContentProps) {
@@ -40,7 +40,7 @@ export function RankingContent({ rankings, currentUserId }: RankingContentProps)
     return filtered.sort((a, b) => b.elo_score - a.elo_score)
   }, [rankings, selectedGender, selectedCategory])
 
-  const userRankIndex = filteredRankings.findIndex(r => r.id === currentUserId)
+  const userRankIndex = currentUserId ? filteredRankings.findIndex(r => r.id === currentUserId) : -1
   const userRank = userRankIndex !== -1 ? filteredRankings[userRankIndex] : null
 
   return (
@@ -120,7 +120,7 @@ export function RankingContent({ rankings, currentUserId }: RankingContentProps)
                 category={player.category_label}
                 matchesPlayed={player.matches_played}
                 winRate={player.win_rate}
-                isCurrentUser={player.id === currentUserId}
+                isCurrentUser={currentUserId ? player.id === currentUserId : false}
               />
             ))
           )}
@@ -141,7 +141,7 @@ export function RankingContent({ rankings, currentUserId }: RankingContentProps)
                 category={player.category_label}
                 matchesPlayed={player.matches_played}
                 winRate={player.win_rate}
-                isCurrentUser={player.id === currentUserId}
+                isCurrentUser={currentUserId ? player.id === currentUserId : false}
               />
             ))
           )}
@@ -188,27 +188,7 @@ function RankingRow({
   winRate,
   isCurrentUser,
 }: RankingRowProps) {
-  const [playerId, setPlayerId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
-
-  useEffect(() => {
-    async function getPlayerId() {
-      const { data } = await supabase
-        .from('players')
-        .select('id')
-        .eq('profile_id', profileId)
-        .eq('is_ghost', false)
-        .maybeSingle()
-      
-      if (data) {
-        setPlayerId(data.id)
-      }
-      setLoading(false)
-    }
-    
-    getPlayerId()
-  }, [profileId, supabase])
+  const { data: playerId, isLoading: loading } = usePlayerIdByProfile(profileId)
 
   const getRankIcon = () => {
     if (rank === 1) return <Trophy className="h-5 w-5 text-amber-500" />
@@ -221,7 +201,8 @@ function RankingRow({
     )
   }
 
-  if (loading || !playerId) {
+  // Only show loading state if we don't have playerId yet (first load)
+  if (loading && !playerId) {
     return (
       <Card className={isCurrentUser ? 'ring-2 ring-primary' : ''}>
         <CardContent className="flex items-center gap-3 p-3">

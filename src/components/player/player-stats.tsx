@@ -10,7 +10,10 @@ interface PlayerStatsProps {
 }
 
 export function PlayerStats({ playerId }: PlayerStatsProps) {
-  const { data: stats, isLoading: loading } = usePlayerStats(playerId)
+  const { data: stats, isLoading } = usePlayerStats(playerId)
+
+  // Only show skeleton if we don't have data yet (first load)
+  const loading = isLoading && !stats
 
   if (loading) {
     return (

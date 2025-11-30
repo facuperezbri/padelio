@@ -3,20 +3,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlayerAvatar } from "@/components/ui/player-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useData } from "@/contexts/data-context";
 import { useCurrentPlayer, usePlayerMatches } from "@/lib/react-query/hooks";
 import { TrendingDown, Trophy } from "lucide-react";
 import Link from "next/link";
 
 export function RecentMatches() {
-  const { stats } = useData();
-  const { data: currentPlayerId } = useCurrentPlayer();
+  const { data: currentPlayerId, isLoading: isLoadingPlayer } = useCurrentPlayer();
   const { data: allMatches = [], isLoading: matchesLoading } = usePlayerMatches(
     currentPlayerId,
     5
   );
 
-  if (stats.loading || matchesLoading) {
+  // Only show skeleton if we don't have data yet (first load)
+  const isLoading = (isLoadingPlayer && !currentPlayerId) || (matchesLoading && allMatches.length === 0);
+
+  if (isLoading) {
     return (
       <Card>
         <CardHeader className="pb-3">

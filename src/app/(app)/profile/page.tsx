@@ -1,57 +1,30 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+'use client'
+
 import { ProfileContent } from '@/components/profile/profile-content'
 import { ProfileSkeleton } from '@/components/skeletons/profile-skeleton'
 import { Header } from '@/components/layout/header'
 import { Button } from '@/components/ui/button'
 import { HelpCircle } from 'lucide-react'
 import Link from 'next/link'
-import { Suspense } from 'react'
-import type { Player, Profile } from '@/types/database'
-
-async function ProfileData() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Load profile, player record, and ghost players in parallel
-  const [profileResult, playerResult, ghostPlayersResult] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('id, full_name, username, avatar_url, elo_score, category_label, country, province, phone, email, gender')
-      .eq('id', user.id)
-      .single(),
-    supabase
-      .from('players')
-      .select('id')
-      .eq('profile_id', user.id)
-      .eq('is_ghost', false)
-      .maybeSingle(),
-    supabase
-      .from('players')
-      .select('id, display_name, elo_score, category_label, matches_played')
-      .eq('created_by_user_id', user.id)
-      .eq('is_ghost', true)
-      .order('display_name')
-  ])
-
-  const profile = profileResult.data as Profile | null
-  const playerRecord = playerResult.data as Player | null
-  const ghostPlayers = (ghostPlayersResult.data || []) as Player[]
-
-  if (!profile) {
-    redirect('/complete-profile')
-  }
-
-  return <ProfileContent profile={profile} playerId={playerRecord?.id || null} ghostPlayers={ghostPlayers} />
-}
+import { useProfile } from '@/lib/react-query/hooks'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function ProfilePage() {
-  return (
-    <Suspense fallback={
+  const { data: profileData, isLoading, error } = useProfile()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading && !profileData && !error) {
+      router.push('/complete-profile')
+    }
+  }, [isLoading, profileData, error, router])
+
+  // Only show skeleton if we don't have data yet (first load)
+  const shouldShowSkeleton = isLoading && !profileData
+
+  if (shouldShowSkeleton) {
+    return (
       <>
         <Header
           title="Perfil"
@@ -72,8 +45,48 @@ export default function ProfilePage() {
         />
         <ProfileSkeleton />
       </>
-    }>
-      <ProfileData />
-    </Suspense>
+    )
+  }
+
+  if (error) {
+    console.error('Error loading profile:', error)
+    return (
+      <>
+        <Header
+          title="Perfil"
+          rightAction={
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="touch-target"
+                asChild
+              >
+                <Link href="/help">
+                  <HelpCircle className="h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
+          }
+        />
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <p className="text-sm text-muted-foreground">Error al cargar el perfil</p>
+        </div>
+      </>
+    )
+  }
+
+  if (!profileData) {
+    return null
+  }
+
+  return (
+    <>
+      <ProfileContent 
+        profile={profileData.profile} 
+        playerId={profileData.playerId} 
+        ghostPlayers={profileData.ghostPlayers} 
+      />
+    </>
   )
 }

@@ -15,7 +15,8 @@ export function HeadToHeadRivalry() {
     currentPlayerId
   )
 
-  const loading = isLoadingPlayer || isLoadingOpponent
+  // Only show skeleton if we don't have data yet (first load)
+  const loading = (isLoadingPlayer && !currentPlayerId) || (isLoadingOpponent && !opponent)
 
   if (loading) {
     return (

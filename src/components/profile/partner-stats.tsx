@@ -38,10 +38,11 @@ export function PartnerStatsComponent({ playerId, filterPartnerId, limit, showVi
     return filteredData
   }, [allStats, filterPartnerId, limit])
 
-  const loading = isLoading || initialLoading
+  // Only show skeleton if we don't have data yet (first load)
+  const loading = (isLoading && allStats.length === 0) || (initialLoading && allStats.length === 0)
   const error = queryError ? 'Error al cargar estadísticas de pareja' : null
 
-  if (loading || initialLoading) {
+  if (loading) {
     const skeletonCount = limit && limit > 0 ? limit : 3
     return (
       <Card>

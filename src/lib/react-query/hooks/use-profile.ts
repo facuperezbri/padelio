@@ -1,0 +1,61 @@
+import { useQuery } from '@tanstack/react-query'
+import { createClient } from '@/lib/supabase/client'
+import type { Player, Profile } from '@/types/database'
+
+interface ProfileData {
+  profile: Profile
+  playerId: string | null
+  ghostPlayers: Player[]
+}
+
+export function useProfile() {
+  const supabase = createClient()
+
+  return useQuery({
+    queryKey: ['profile'],
+    queryFn: async (): Promise<ProfileData | null> => {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        return null
+      }
+
+      // Load profile, player record, and ghost players in parallel
+      const [profileResult, playerResult, ghostPlayersResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, full_name, username, avatar_url, elo_score, category_label, country, province, phone, email, gender')
+          .eq('id', user.id)
+          .single(),
+        supabase
+          .from('players')
+          .select('id')
+          .eq('profile_id', user.id)
+          .eq('is_ghost', false)
+          .maybeSingle(),
+        supabase
+          .from('players')
+          .select('id, display_name, elo_score, category_label, matches_played')
+          .eq('created_by_user_id', user.id)
+          .eq('is_ghost', true)
+          .order('display_name')
+      ])
+
+      const profile = profileResult.data as Profile | null
+      const playerRecord = playerResult.data as Player | null
+      const ghostPlayers = (ghostPlayersResult.data || []) as Player[]
+
+      if (!profile) {
+        return null
+      }
+
+      return {
+        profile,
+        playerId: playerRecord?.id || null,
+        ghostPlayers
+      }
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+

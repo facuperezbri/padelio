@@ -92,7 +92,10 @@ export function HeadToHeadStatsComponent({
     }
   }
 
-  if (loading && initialStats === undefined) {
+  // Only show skeleton if we don't have data yet (first load)
+  const shouldShowSkeleton = loading && !finalStats && initialStats === undefined
+
+  if (shouldShowSkeleton) {
     return (
       <Card>
         <CardHeader className="pb-3">

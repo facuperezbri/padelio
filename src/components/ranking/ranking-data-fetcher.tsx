@@ -1,31 +1,33 @@
-import { createClient } from '@/lib/supabase/server'
-import { Suspense } from 'react'
-import type { GlobalRanking } from '@/types/database'
+'use client'
+
 import { RankingContent } from './ranking-content'
 import { RankingSkeleton } from './ranking-content'
-
-async function RankingDataFetcher() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) return null
-
-  const { data: rankings } = await supabase
-    .from('global_ranking')
-    .select('*')
-    .order('elo_score', { ascending: false })
-    .limit(100)
-
-  const globalRankings = (rankings || []) as GlobalRanking[]
-
-  return <RankingContent rankings={globalRankings} currentUserId={user.id} />
-}
+import { useRanking } from '@/lib/react-query/hooks'
 
 export function RankingContentWrapper() {
-  return (
-    <Suspense fallback={<RankingSkeleton />}>
-      <RankingDataFetcher />
-    </Suspense>
-  )
+  const { data, isLoading, error } = useRanking()
+
+  // Only show skeleton if we don't have data yet (first load)
+  const shouldShowSkeleton = isLoading && !data
+
+  if (shouldShowSkeleton) {
+    return <RankingSkeleton />
+  }
+
+  if (error) {
+    console.error('Error loading ranking:', error)
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <p className="text-sm text-muted-foreground">Error al cargar el ranking</p>
+      </div>
+    )
+  }
+
+  if (!data) {
+    return null
+  }
+
+  // Show ranking even if currentUserId is null (for public viewing)
+  return <RankingContent rankings={data.rankings} currentUserId={data.currentUserId} />
 }
 

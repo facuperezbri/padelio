@@ -1,138 +1,38 @@
-import { createClient } from '@/lib/supabase/server'
-import { Suspense } from 'react'
+'use client'
+
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { PlayerAvatar } from '@/components/ui/player-avatar'
 import { ScoreDisplay } from '@/components/match/score-display'
 import { TrendingUp, TrendingDown, MapPin, Calendar } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { SetScore, EloChanges, Player } from '@/types/database'
+import { useCurrentPlayer, usePlayerMatches, type MatchWithPlayers } from '@/lib/react-query/hooks'
+import type { EloChanges } from '@/types/database'
+import { useMemo } from 'react'
 
-type PlayerWithAvatar = Player & { avatar_url?: string | null }
+function MatchesListContent() {
+  const { data: currentPlayerId, isLoading: isLoadingPlayer } = useCurrentPlayer()
+  const { data: matches = [], isLoading: matchesLoading } = usePlayerMatches(currentPlayerId)
 
-interface MatchWithPlayers {
-  id: string
-  match_date: string
-  venue: string | null
-  score_sets: SetScore[]
-  winner_team: 1 | 2
-  elo_changes: EloChanges | null
-  player_1: PlayerWithAvatar
-  player_2: PlayerWithAvatar
-  player_3: PlayerWithAvatar
-  player_4: PlayerWithAvatar
-}
-
-async function MatchesListContent() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) return null
-
-  const { data: playerRecord } = await supabase
-    .from('players')
-    .select('id')
-    .eq('profile_id', user.id)
-    .maybeSingle()
-
-  let matches: MatchWithPlayers[] = []
-
-  // Solo buscar partidos donde el jugador registrado haya participado
-  // Usar exactamente la misma sintaxis que funciona en data-context.tsx
-  if (playerRecord?.id) {
-    const orConditions = `player_1_id.eq.${playerRecord.id},player_2_id.eq.${playerRecord.id},player_3_id.eq.${playerRecord.id},player_4_id.eq.${playerRecord.id}`
-
-    // Primero obtener los partidos sin joins complejos (como en data-context.tsx)
-    const { data: matchesData, error } = await supabase
-      .from('matches')
-      .select(`
-        id,
-        match_date,
-        venue,
-        score_sets,
-        winner_team,
-        elo_changes,
-        player_1:players!matches_player_1_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id),
-        player_2:players!matches_player_2_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id),
-        player_3:players!matches_player_3_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id),
-        player_4:players!matches_player_4_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id)
-      `)
-      .or(orConditions)
-      .order('match_date', { ascending: false })
-
-    if (!error && matchesData) {
-      // Obtener los profile_ids únicos para buscar avatares
-      const profileIds = new Set<string>()
-      matchesData.forEach(match => {
-        const p1 = match.player_1 as any
-        const p2 = match.player_2 as any
-        const p3 = match.player_3 as any
-        const p4 = match.player_4 as any
-        
-        if (p1?.profile_id && !p1.is_ghost) profileIds.add(p1.profile_id)
-        if (p2?.profile_id && !p2.is_ghost) profileIds.add(p2.profile_id)
-        if (p3?.profile_id && !p3.is_ghost) profileIds.add(p3.profile_id)
-        if (p4?.profile_id && !p4.is_ghost) profileIds.add(p4.profile_id)
-      })
-
-      // Obtener avatares de los perfiles
-      let avatarsMap: Record<string, string | null> = {}
-      if (profileIds.size > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, avatar_url')
-          .in('id', Array.from(profileIds))
-
-        if (profiles) {
-          profiles.forEach(profile => {
-            avatarsMap[profile.id] = profile.avatar_url
-          })
-        }
-      }
-
-      // Helper function to get avatar_url
-      const getAvatarUrl = (player: any): string | null => {
-        if (player.is_ghost || !player.profile_id) return null
-        return avatarsMap[player.profile_id] || null
-      }
-
-      const createPlayerWithAvatar = (player: any): PlayerWithAvatar => {
-        const basePlayer = player as unknown as Player
-        return {
-          ...basePlayer,
-          avatar_url: getAvatarUrl(player),
-        }
-      }
-
-      matches = matchesData.map(m => {
-        const p1 = m.player_1 as any
-        const p2 = m.player_2 as any
-        const p3 = m.player_3 as any
-        const p4 = m.player_4 as any
-        
-        return {
-          ...m,
-          score_sets: m.score_sets as SetScore[],
-          elo_changes: m.elo_changes as EloChanges | null,
-          player_1: createPlayerWithAvatar(p1),
-          player_2: createPlayerWithAvatar(p2),
-          player_3: createPlayerWithAvatar(p3),
-          player_4: createPlayerWithAvatar(p4),
-        }
-      })
-    }
-  }
+  // Only show skeleton if we don't have data yet (first load)
+  const isLoading = (isLoadingPlayer && !currentPlayerId) || (matchesLoading && matches.length === 0)
 
   // Group matches by month
-  const groupedMatches = matches.reduce((groups, match) => {
-    const date = new Date(match.match_date)
-    const monthKey = date.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
-    if (!groups[monthKey]) {
-      groups[monthKey] = []
-    }
-    groups[monthKey].push(match)
-    return groups
-  }, {} as Record<string, MatchWithPlayers[]>)
+  const groupedMatches = useMemo(() => {
+    return matches.reduce((groups, match) => {
+      const date = new Date(match.match_date)
+      const monthKey = date.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+      if (!groups[monthKey]) {
+        groups[monthKey] = []
+      }
+      groups[monthKey].push(match)
+      return groups
+    }, {} as Record<string, MatchWithPlayers[]>)
+  }, [matches])
+
+  if (isLoading) {
+    return <MatchesListSkeleton />
+  }
 
   if (matches.length === 0) {
     return (
@@ -163,17 +63,19 @@ async function MatchesListContent() {
           </h2>
           <div className="space-y-3">
             {monthMatches.map((match) => {
+              if (!currentPlayerId) return null
+
               // Buscar la posición del jugador registrado en el partido
               let userPosition = 0
-              if (playerRecord && match.player_1.id === playerRecord.id) userPosition = 1
-              else if (playerRecord && match.player_2.id === playerRecord.id) userPosition = 2
-              else if (playerRecord && match.player_3.id === playerRecord.id) userPosition = 3
-              else if (playerRecord && match.player_4.id === playerRecord.id) userPosition = 4
+              if (match.player_1_id === currentPlayerId) userPosition = 1
+              else if (match.player_2_id === currentPlayerId) userPosition = 2
+              else if (match.player_3_id === currentPlayerId) userPosition = 3
+              else if (match.player_4_id === currentPlayerId) userPosition = 4
               
               const isTeam1 = userPosition <= 2
               const won = (isTeam1 && match.winner_team === 1) || (!isTeam1 && match.winner_team === 2)
               
-              const eloKey = `player_${userPosition}` as keyof EloChanges
+              const eloKey = `player_${userPosition}` as 'player_1' | 'player_2' | 'player_3' | 'player_4'
               const eloChange = match.elo_changes?.[eloKey]?.change || 0
 
               return (
@@ -316,10 +218,6 @@ function MatchesListSkeleton() {
 }
 
 export function MatchesList() {
-  return (
-    <Suspense fallback={<MatchesListSkeleton />}>
-      <MatchesListContent />
-    </Suspense>
-  )
+  return <MatchesListContent />
 }
 
