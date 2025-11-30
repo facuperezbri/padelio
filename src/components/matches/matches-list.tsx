@@ -8,6 +8,8 @@ import { TrendingUp, TrendingDown, MapPin, Calendar } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { SetScore, EloChanges, Player } from '@/types/database'
 
+type PlayerWithAvatar = Player & { avatar_url?: string | null }
+
 interface MatchWithPlayers {
   id: string
   match_date: string
@@ -15,10 +17,10 @@ interface MatchWithPlayers {
   score_sets: SetScore[]
   winner_team: 1 | 2
   elo_changes: EloChanges | null
-  player_1: Player
-  player_2: Player
-  player_3: Player
-  player_4: Player
+  player_1: PlayerWithAvatar
+  player_2: PlayerWithAvatar
+  player_3: PlayerWithAvatar
+  player_4: PlayerWithAvatar
 }
 
 async function MatchesListContent() {
@@ -80,26 +82,22 @@ async function MatchesListContent() {
         return player.profiles?.avatar_url || null
       }
 
+      const createPlayerWithAvatar = (player: any): PlayerWithAvatar => {
+        const basePlayer = player as unknown as Player
+        return {
+          ...basePlayer,
+          avatar_url: getAvatarUrl(player),
+        }
+      }
+
       return {
         ...m,
         score_sets: m.score_sets as SetScore[],
         elo_changes: m.elo_changes as EloChanges | null,
-        player_1: {
-          ...(m.player_1 as unknown as Player),
-          avatar_url: getAvatarUrl(m.player_1),
-        } as Player,
-        player_2: {
-          ...(m.player_2 as unknown as Player),
-          avatar_url: getAvatarUrl(m.player_2),
-        } as Player,
-        player_3: {
-          ...(m.player_3 as unknown as Player),
-          avatar_url: getAvatarUrl(m.player_3),
-        } as Player,
-        player_4: {
-          ...(m.player_4 as unknown as Player),
-          avatar_url: getAvatarUrl(m.player_4),
-        } as Player,
+        player_1: createPlayerWithAvatar(m.player_1),
+        player_2: createPlayerWithAvatar(m.player_2),
+        player_3: createPlayerWithAvatar(m.player_3),
+        player_4: createPlayerWithAvatar(m.player_4),
       }
     })
   }

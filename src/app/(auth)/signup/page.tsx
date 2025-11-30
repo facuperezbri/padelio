@@ -73,17 +73,20 @@ export default function SignupPage() {
       const provinces = getProvincesByCountry(formData.country);
       setAvailableProvinces(provinces);
       // Reset province if country changes
-      if (
-        formData.province &&
-        !provinces.find(
-          (p) => p.code === formData.province || p.name === formData.province
-        )
-      ) {
-        setFormData({ ...formData, province: "" });
-      }
+      setFormData((prev) => {
+        if (
+          prev.province &&
+          !provinces.find(
+            (p) => p.code === prev.province || p.name === prev.province
+          )
+        ) {
+          return { ...prev, province: "" };
+        }
+        return prev;
+      });
     } else {
       setAvailableProvinces([]);
-      setFormData({ ...formData, province: "" });
+      setFormData((prev) => ({ ...prev, province: "" }));
     }
   }, [formData.country]);
 
