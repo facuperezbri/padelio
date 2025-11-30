@@ -23,12 +23,35 @@ async function RankingContent() {
 
   const globalRankings = (rankings || []) as GlobalRanking[]
 
+  // Get all players
   const { data: allPlayers } = await supabase
     .from('player_stats')
     .select('*')
     .gt('matches_played', 0)
     .order('elo_score', { ascending: false })
     .limit(100)
+
+  // Get avatar URLs for registered players (non-ghost with profile_id)
+  const profileIds = new Set<string>()
+  allPlayers?.forEach(player => {
+    if (player.profile_id && !player.is_ghost) {
+      profileIds.add(player.profile_id)
+    }
+  })
+
+  let avatarsMap: Record<string, string | null> = {}
+  if (profileIds.size > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, avatar_url')
+      .in('id', Array.from(profileIds))
+
+    if (profiles) {
+      profiles.forEach(profile => {
+        avatarsMap[profile.id] = profile.avatar_url
+      })
+    }
+  }
 
   const userRank = globalRankings.find(r => r.id === user.id)
 
@@ -97,19 +120,27 @@ async function RankingContent() {
           {!allPlayers || allPlayers.length === 0 ? (
             <EmptyState />
           ) : (
-            allPlayers.map((player, index) => (
-              <RankingRow
-                key={player.id}
-                rank={index + 1}
-                name={player.display_name}
-                isGhost={player.is_ghost}
-                elo={player.elo_score}
-                category={player.category_label}
-                matchesPlayed={player.matches_played}
-                winRate={player.win_rate}
-                isCurrentUser={player.profile_id === user.id}
-              />
-            ))
+            allPlayers.map((player, index) => {
+              // Get avatar_url from the map for registered players
+              const avatarUrl = player.profile_id && !player.is_ghost
+                ? avatarsMap[player.profile_id] || null
+                : null
+              
+              return (
+                <RankingRow
+                  key={player.id}
+                  rank={index + 1}
+                  name={player.display_name}
+                  avatarUrl={avatarUrl}
+                  isGhost={player.is_ghost}
+                  elo={player.elo_score}
+                  category={player.category_label}
+                  matchesPlayed={player.matches_played}
+                  winRate={player.win_rate}
+                  isCurrentUser={player.profile_id === user.id}
+                />
+              )
+            })
           )}
         </TabsContent>
       </Tabs>
