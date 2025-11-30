@@ -29,40 +29,23 @@ async function MatchesListContent() {
   
   if (!user) return null
 
-  const { data: playerRecord } = await supabase
+  const { data: playerRecord, error: playerError } = await supabase
     .from('players')
     .select('id')
     .eq('profile_id', user.id)
-    .single()
+    .maybeSingle()
 
-  // Obtener IDs de ghost players vinculados al usuario
-  const { data: claimedGhostPlayers } = await supabase
-    .from('players')
-    .select('id')
-    .eq('claimed_by_profile_id', user.id)
-    .eq('is_ghost', true)
-
-  const claimedGhostIds = claimedGhostPlayers?.map(p => p.id) || []
-  const allPlayerIds = playerRecord 
-    ? [playerRecord.id, ...claimedGhostIds]
-    : claimedGhostIds
+  if (playerError) {
+    console.error('Error fetching player record:', playerError)
+  }
 
   let matches: MatchWithPlayers[] = []
 
-  if (allPlayerIds.length > 0) {
-    // Construir la consulta OR para incluir el usuario real y sus ghost players vinculados
-    // La sintaxis correcta para Supabase OR es: col1.eq.val1,col2.eq.val2
-    // Necesitamos crear todas las combinaciones posibles de columnas e IDs
-    const orConditions: string[] = []
-    allPlayerIds.forEach(id => {
-      orConditions.push(`player_1_id.eq.${id}`)
-      orConditions.push(`player_2_id.eq.${id}`)
-      orConditions.push(`player_3_id.eq.${id}`)
-      orConditions.push(`player_4_id.eq.${id}`)
-    })
-    const orQuery = orConditions.join(',')
+  // Solo buscar partidos donde el jugador registrado haya participado
+  if (playerRecord?.id) {
+    const orConditions = `player_1_id.eq.${playerRecord.id},player_2_id.eq.${playerRecord.id},player_3_id.eq.${playerRecord.id},player_4_id.eq.${playerRecord.id}`
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('matches')
       .select(`
         id,
@@ -76,8 +59,15 @@ async function MatchesListContent() {
         player_3:players!matches_player_3_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id, profiles!left(avatar_url)),
         player_4:players!matches_player_4_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id, profiles!left(avatar_url))
       `)
-      .or(orQuery)
+      .or(orConditions)
       .order('match_date', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching matches:', error)
+      console.error('Player ID:', playerRecord.id)
+    } else {
+      console.log('Matches found:', data?.length || 0)
+    }
 
     matches = (data || []).map(m => {
       // Helper function to extract avatar_url from profiles join
@@ -149,12 +139,12 @@ async function MatchesListContent() {
           </h2>
           <div className="space-y-3">
             {monthMatches.map((match) => {
-              // Buscar en todos los IDs (usuario real + ghost players vinculados)
+              // Buscar la posición del jugador registrado en el partido
               let userPosition = 0
-              if (allPlayerIds.includes(match.player_1.id)) userPosition = 1
-              else if (allPlayerIds.includes(match.player_2.id)) userPosition = 2
-              else if (allPlayerIds.includes(match.player_3.id)) userPosition = 3
-              else if (allPlayerIds.includes(match.player_4.id)) userPosition = 4
+              if (playerRecord && match.player_1.id === playerRecord.id) userPosition = 1
+              else if (playerRecord && match.player_2.id === playerRecord.id) userPosition = 2
+              else if (playerRecord && match.player_3.id === playerRecord.id) userPosition = 3
+              else if (playerRecord && match.player_4.id === playerRecord.id) userPosition = 4
               
               const isTeam1 = userPosition <= 2
               const won = (isTeam1 && match.winner_team === 1) || (!isTeam1 && match.winner_team === 2)
