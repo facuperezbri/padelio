@@ -159,7 +159,7 @@ input[type="number"] {
 input[type="date"],
 input[type="time"],
 input[type="datetime-local"] {
-  box-sizing: border-box;
-  max-width: 100%;
-  width: 100%;
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+  width: 100% !important;
 }

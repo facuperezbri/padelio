@@ -5,6 +5,7 @@ A modern Progressive Web App (PWA) for tracking padel matches, calculating ELO r
 ## 📱 Features
 
 ### Core Functionality
+
 - **Match Registration**: Record padel matches with detailed scoring (sets, games)
 - **ELO Ranking System**: Automatic ELO calculation based on match results
 - **Player Categories**: Argentine padel ranking system (8va to 1ra categories)
@@ -14,11 +15,13 @@ A modern Progressive Web App (PWA) for tracking padel matches, calculating ELO r
 - **Ghost Players**: Add players without accounts to your matches
 
 ### Social Features
+
 - **Match Invitations**: Invite players to confirm matches via shareable links
 - **WhatsApp Integration**: Share match results and invitations directly through WhatsApp
 - **Player Management**: Create and manage ghost players for casual matches
 
 ### User Experience
+
 - **Progressive Web App**: Installable on mobile devices with offline support
 - **Push Notifications**: Receive notifications for match invitations and updates
 - **Responsive Design**: Optimized for mobile and desktop
@@ -26,6 +29,7 @@ A modern Progressive Web App (PWA) for tracking padel matches, calculating ELO r
 - **Profile Customization**: Upload avatars and customize your profile
 
 ### Advanced Features
+
 - **Match Configuration**: Golden Point and Super Tie-break settings
 - **Match Time Tracking**: Record when matches were played
 - **Venue Tracking**: Add location information to matches
@@ -34,6 +38,7 @@ A modern Progressive Web App (PWA) for tracking padel matches, calculating ELO r
 ## 🛠️ Technologies Used
 
 ### Frontend
+
 - **Next.js 15** - React framework with App Router
 - **React 18** - UI library
 - **TypeScript** - Type-safe development
@@ -42,6 +47,7 @@ A modern Progressive Web App (PWA) for tracking padel matches, calculating ELO r
 - **Lucide React** - Icon library
 
 ### Backend & Database
+
 - **Supabase** - Backend as a Service
   - PostgreSQL database
   - Authentication (OAuth + Email)
@@ -50,11 +56,13 @@ A modern Progressive Web App (PWA) for tracking padel matches, calculating ELO r
   - Storage for avatars
 
 ### PWA & Notifications
+
 - **Service Workers** - Offline support and caching
 - **Web Push API** - Push notifications
 - **Manifest.json** - PWA configuration
 
 ### Development Tools
+
 - **ESLint** - Code linting
 - **PostCSS** - CSS processing
 - **TypeScript** - Static type checking
@@ -62,6 +70,7 @@ A modern Progressive Web App (PWA) for tracking padel matches, calculating ELO r
 ## 📸 Screenshots
 
 > **Note**: Add screenshots of your application here. Consider including:
+>
 > - Home screen with stats
 > - Match registration form
 > - Ranking page
@@ -71,30 +80,35 @@ A modern Progressive Web App (PWA) for tracking padel matches, calculating ELO r
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 18+ and npm
 - Supabase account and project
 
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/yourusername/padelio.git
 cd padelio
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Set up environment variables:
-Create a `.env.local` file with your Supabase credentials:
+   Create a `.env.local` file with your Supabase credentials:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 4. Set up the database:
+
 - Run the SQL migrations in `supabase/migrations/` in order:
   - `001_add_features.sql`
   - `002_storage_setup.sql`
@@ -102,6 +116,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
   - `004_add_match_time.sql`
 
 5. Run the development server:
+
 ```bash
 npm run dev
 ```
@@ -136,6 +151,7 @@ padelio/
 ## 🔐 Authentication
 
 The app supports multiple authentication methods:
+
 - Email/Password
 - OAuth providers (Google, GitHub)
 - Magic links
@@ -145,11 +161,13 @@ See `OAUTH_SETUP.md` for detailed OAuth configuration instructions.
 ## 📊 ELO System
 
 The ELO rating system automatically calculates player rankings based on:
+
 - Match results
 - Opponent strength
 - Expected vs actual performance
 
 Categories are automatically assigned based on ELO scores:
+
 - **8va**: < 1100
 - **7ma**: 1100 - 1299
 - **6ta**: 1300 - 1499
@@ -190,6 +208,7 @@ Una aplicación web progresiva (PWA) moderna para rastrear partidos de pádel, c
 ## 📱 Funcionalidades
 
 ### Funcionalidad Principal
+
 - **Registro de Partidos**: Registra partidos de pádel con puntuación detallada (sets, juegos)
 - **Sistema de Ranking ELO**: Cálculo automático de ELO basado en resultados de partidos
 - **Categorías de Jugadores**: Sistema de ranking argentino de pádel (categorías de 8va a 1ra)
@@ -199,11 +218,13 @@ Una aplicación web progresiva (PWA) moderna para rastrear partidos de pádel, c
 - **Jugadores Fantasma**: Agrega jugadores sin cuenta a tus partidos
 
 ### Funciones Sociales
+
 - **Invitaciones a Partidos**: Invita jugadores a confirmar partidos mediante enlaces compartibles
 - **Integración con WhatsApp**: Comparte resultados de partidos e invitaciones directamente a través de WhatsApp
 - **Gestión de Jugadores**: Crea y gestiona jugadores fantasma para partidos casuales
 
 ### Experiencia de Usuario
+
 - **Aplicación Web Progresiva**: Instalable en dispositivos móviles con soporte offline
 - **Notificaciones Push**: Recibe notificaciones para invitaciones a partidos y actualizaciones
 - **Diseño Responsivo**: Optimizado para móvil y escritorio
@@ -211,7 +232,8 @@ Una aplicación web progresiva (PWA) moderna para rastrear partidos de pádel, c
 - **Personalización de Perfil**: Sube avatares y personaliza tu perfil
 
 ### Funciones Avanzadas
-- **Configuración de Partidos**: Configuración de Golden Point y Super Tie-break
+
+- **Configuración de Partidos**: Configuración de Punto de Oro y Super Tie-break
 - **Seguimiento de Tiempo**: Registra cuándo se jugaron los partidos
 - **Seguimiento de Ubicación**: Agrega información de ubicación a los partidos
 - **Notas de Partidos**: Agrega notas y comentarios a los partidos
@@ -219,6 +241,7 @@ Una aplicación web progresiva (PWA) moderna para rastrear partidos de pádel, c
 ## 🛠️ Tecnologías Utilizadas
 
 ### Frontend
+
 - **Next.js 15** - Framework React con App Router
 - **React 18** - Biblioteca de UI
 - **TypeScript** - Desarrollo con tipos seguros
@@ -227,6 +250,7 @@ Una aplicación web progresiva (PWA) moderna para rastrear partidos de pádel, c
 - **Lucide React** - Biblioteca de iconos
 
 ### Backend y Base de Datos
+
 - **Supabase** - Backend como Servicio
   - Base de datos PostgreSQL
   - Autenticación (OAuth + Email)
@@ -235,11 +259,13 @@ Una aplicación web progresiva (PWA) moderna para rastrear partidos de pádel, c
   - Almacenamiento para avatares
 
 ### PWA y Notificaciones
+
 - **Service Workers** - Soporte offline y caché
 - **Web Push API** - Notificaciones push
 - **Manifest.json** - Configuración PWA
 
 ### Herramientas de Desarrollo
+
 - **ESLint** - Linting de código
 - **PostCSS** - Procesamiento de CSS
 - **TypeScript** - Verificación de tipos estáticos
@@ -247,6 +273,7 @@ Una aplicación web progresiva (PWA) moderna para rastrear partidos de pádel, c
 ## 📸 Capturas de Pantalla
 
 > **Nota**: Agrega capturas de pantalla de tu aplicación aquí. Considera incluir:
+>
 > - Pantalla de inicio con estadísticas
 > - Formulario de registro de partidos
 > - Página de ranking
@@ -256,30 +283,35 @@ Una aplicación web progresiva (PWA) moderna para rastrear partidos de pádel, c
 ## 🚀 Comenzar
 
 ### Prerrequisitos
+
 - Node.js 18+ y npm
 - Cuenta y proyecto de Supabase
 
 ### Instalación
 
 1. Clona el repositorio:
+
 ```bash
 git clone https://github.com/yourusername/padelio.git
 cd padelio
 ```
 
 2. Instala las dependencias:
+
 ```bash
 npm install
 ```
 
 3. Configura las variables de entorno:
-Crea un archivo `.env.local` con tus credenciales de Supabase:
+   Crea un archivo `.env.local` con tus credenciales de Supabase:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
 ```
 
 4. Configura la base de datos:
+
 - Ejecuta las migraciones SQL en `supabase/migrations/` en orden:
   - `001_add_features.sql`
   - `002_storage_setup.sql`
@@ -287,6 +319,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
   - `004_add_match_time.sql`
 
 5. Ejecuta el servidor de desarrollo:
+
 ```bash
 npm run dev
 ```
@@ -321,6 +354,7 @@ padelio/
 ## 🔐 Autenticación
 
 La aplicación admite múltiples métodos de autenticación:
+
 - Email/Contraseña
 - Proveedores OAuth (Google, GitHub)
 - Enlaces mágicos
@@ -330,11 +364,13 @@ Consulta `OAUTH_SETUP.md` para instrucciones detalladas de configuración OAuth.
 ## 📊 Sistema ELO
 
 El sistema de puntuación ELO calcula automáticamente los rankings de los jugadores basándose en:
+
 - Resultados de partidos
 - Fortaleza del oponente
 - Rendimiento esperado vs real
 
 Las categorías se asignan automáticamente según las puntuaciones ELO:
+
 - **8va**: < 1100
 - **7ma**: 1100 - 1299
 - **6ta**: 1300 - 1499
@@ -365,4 +401,3 @@ Este proyecto es privado y propietario.
 ## 👤 Autor
 
 Facundo Pérez Brizuela
-
