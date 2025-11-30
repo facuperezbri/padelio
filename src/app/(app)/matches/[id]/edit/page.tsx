@@ -504,16 +504,16 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2 min-w-0 overflow-hidden">
+              <div className="space-y-2">
                 <Label>Fecha</Label>
                 <Input
                   type="date"
                   value={matchDate}
                   onChange={(e) => setMatchDate(e.target.value)}
-                  className="w-full max-w-full"
+                  className="w-full box-border"
                 />
               </div>
-              <div className="space-y-2 min-w-0 overflow-hidden">
+              <div className="space-y-2">
                 <Label>Hora</Label>
                 <Input
                   type="time"
@@ -525,7 +525,7 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
                     setMatchTime(roundedTime);
                   }}
                   step="1800"
-                  className="w-full max-w-full"
+                  className="w-full box-border"
                 />
               </div>
             </div>
