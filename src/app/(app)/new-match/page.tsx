@@ -1256,7 +1256,7 @@ export default function NewMatchPage() {
           onOpenChange={(open) => {
             // Close dialog immediately for instant visual feedback
             setShowShareDialog(open);
-            
+
             // Execute heavy operations after dialog closes (only if closed and match was created)
             if (!open && success) {
               setTimeout(async () => {
