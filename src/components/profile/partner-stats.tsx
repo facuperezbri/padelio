@@ -240,12 +240,13 @@ export function PartnerStatsComponent({ playerId, filterPartnerId, limit, showVi
                 name={stat.partner_name}
                 avatarUrl={stat.partner_avatar_url}
                 size="md"
+                className="ring-2 ring-background"
               />
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{stat.partner_name}</p>
                 <div className="flex flex-col gap-1.5 mt-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="outline" className="text-xs pl-0 border-0 bg-transparent">
                       {stat.total_matches} partidos
                     </Badge>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">

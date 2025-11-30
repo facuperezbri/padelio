@@ -49,7 +49,6 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ClaimGhostPlayers } from "./claim-ghost-players";
-import { PartnerStatsComponent } from "./partner-stats";
 import { useEditMode } from "./profile-edit-button-wrapper";
 
 interface ProfileFormProps {
@@ -465,9 +464,6 @@ export function ProfileForm({
             )}
           </CardContent>
         </Card>
-
-        {/* Partner Stats */}
-        {playerId && !editMode && <PartnerStatsComponent playerId={playerId} />}
 
         {/* Ghost Players */}
         {ghostPlayers.length > 0 && (
