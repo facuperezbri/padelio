@@ -273,50 +273,6 @@ function RankingRow({
     </Link>
   )
 }
-  const getRankIcon = () => {
-    if (rank === 1) return <Trophy className="h-5 w-5 text-amber-500" />
-    if (rank === 2) return <Medal className="h-5 w-5 text-slate-400" />
-    if (rank === 3) return <Award className="h-5 w-5 text-amber-700" />
-    return (
-      <span className="flex h-5 w-5 items-center justify-center text-sm font-semibold text-muted-foreground">
-        {rank}
-      </span>
-    )
-  }
-
-  return (
-    <Card className={isCurrentUser ? 'ring-2 ring-primary' : ''}>
-      <CardContent className="flex items-center gap-3 p-3">
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
-          {getRankIcon()}
-        </div>
-        
-        <PlayerAvatar
-          name={name}
-          avatarUrl={avatarUrl}
-          size="md"
-        />
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="truncate font-medium">{name}</p>
-            <NewPlayerBadge matchesPlayed={matchesPlayed} />
-            {isCurrentUser && (
-              <span className="rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
-                Vos
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {matchesPlayed} partidos · {winRate}% victorias
-          </p>
-        </div>
-        
-        <EloBadge elo={elo} category={category} size="sm" />
-      </CardContent>
-    </Card>
-  )
-}
 
 export function RankingSkeleton() {
   return (
