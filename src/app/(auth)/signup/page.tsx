@@ -10,6 +10,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -29,6 +37,7 @@ import {
 } from "@/types/database";
 import {
   Globe,
+  Info,
   Loader2,
   Lock,
   Mail,
@@ -109,7 +118,9 @@ export default function SignupPage() {
         options: {
           data: {
             full_name: formData.fullName,
-            username: formData.username,
+            username: formData.username
+              .toLowerCase()
+              .replace(/[^a-z0-9_]/g, ""),
           },
         },
       });
@@ -128,13 +139,18 @@ export default function SignupPage() {
       } = await supabase.auth.getUser();
 
       if (user) {
+        // Ensure username is lowercase before saving
+        const normalizedUsername = formData.username
+          .toLowerCase()
+          .replace(/[^a-z0-9_]/g, "");
+
         await supabase
           .from("profiles")
           .update({
             elo_score: initialElo,
             category_label: formData.category,
             full_name: formData.fullName,
-            username: formData.username,
+            username: normalizedUsername,
             email: formData.email,
             country: formData.country || null,
             province: formData.province || null,
@@ -279,7 +295,113 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category">Tu Categoría de Padel</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="category">Tu Categoría de Padel</Label>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                        aria-label="Información sobre el sistema de puntuación"
+                      >
+                        <Info className="h-4 w-4" />
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Sistema de Puntuación ELO</DialogTitle>
+                        <DialogDescription>
+                          Cómo funciona el sistema de puntuación en Padelio
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 text-sm">
+                        <div>
+                          <h3 className="font-semibold mb-2">
+                            ¿Qué es el ELO?
+                          </h3>
+                          <p className="text-muted-foreground">
+                            El ELO es un sistema de puntuación que refleja tu
+                            nivel de juego. Cuanto más alto sea tu ELO, mejor
+                            jugador sos considerado.
+                          </p>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-2">
+                            Puntuación Inicial por Categoría
+                          </h3>
+                          <div className="space-y-1 text-muted-foreground">
+                            {CATEGORIES.map((cat) => (
+                              <div
+                                key={cat}
+                                className="flex items-center justify-between"
+                              >
+                                <span>{CATEGORY_LABELS[cat]}</span>
+                                <span className="font-mono">
+                                  {CATEGORY_ELO_MAP[cat]} pts
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-2">
+                            ¿Cómo cambia mi ELO?
+                          </h3>
+                          <p className="text-muted-foreground mb-2">
+                            Después de cada partido, tu ELO se actualiza según:
+                          </p>
+                          <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
+                            <li>
+                              <strong>Si ganaste:</strong> Tu ELO aumenta
+                            </li>
+                            <li>
+                              <strong>Si perdiste:</strong> Tu ELO disminuye
+                            </li>
+                            <li>
+                              <strong>El nivel del oponente:</strong> Ganar
+                              contra jugadores más fuertes te da más puntos
+                            </li>
+                            <li>
+                              <strong>Factor de aceleración:</strong> En tus
+                              primeros 10 partidos, los cambios son el doble de
+                              rápidos para ajustar tu nivel más rápido
+                            </li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-2">
+                            Actualización de Categoría
+                          </h3>
+                          <p className="text-muted-foreground">
+                            Tu categoría se actualiza automáticamente según tu
+                            ELO:
+                          </p>
+                          <div className="mt-2 space-y-1 text-muted-foreground text-xs">
+                            <div>• Menos de 1100 pts → 8va Categoría</div>
+                            <div>• 1100-1299 pts → 7ma Categoría</div>
+                            <div>• 1300-1499 pts → 6ta Categoría</div>
+                            <div>• 1500-1699 pts → 5ta Categoría</div>
+                            <div>• 1700-1899 pts → 4ta Categoría</div>
+                            <div>• 1900-2099 pts → 3ra Categoría</div>
+                            <div>• 2100-2299 pts → 2da Categoría</div>
+                            <div>• 2300+ pts → 1ra Categoría</div>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t">
+                          <p className="text-xs text-muted-foreground">
+                            <strong>Tip:</strong> Seleccioná la categoría que
+                            mejor represente tu nivel actual. Tu ELO se ajustará
+                            automáticamente mientras jugás partidos.
+                          </p>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 <Select
                   value={formData.category}
                   onValueChange={(value) =>

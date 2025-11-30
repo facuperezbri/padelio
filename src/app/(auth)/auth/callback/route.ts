@@ -62,11 +62,14 @@ export async function GET(request: Request) {
       // If profile doesn't exist, try to create it
       if (profileError || !profile) {
         const metadata = user.user_metadata || {};
-        const username =
+        const username = (
           metadata.username ||
           metadata.preferred_username ||
           metadata.email?.split("@")[0] ||
-          `user_${user.id.slice(0, 8)}`;
+          `user_${user.id.slice(0, 8)}`
+        )
+          .toLowerCase()
+          .replace(/[^a-z0-9_]/g, "");
         const fullName =
           metadata.full_name ||
           metadata.name ||

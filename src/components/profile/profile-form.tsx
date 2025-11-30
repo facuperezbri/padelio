@@ -52,11 +52,14 @@ export function ProfileForm({ initialProfile, initialGhostPlayers }: ProfileForm
     setSaving(true)
     setError(null)
 
+    // Ensure username is lowercase before saving
+    const normalizedUsername = formData.username.toLowerCase().replace(/[^a-z0-9_]/g, '')
+
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
         full_name: formData.fullName,
-        username: formData.username,
+        username: normalizedUsername,
       })
       .eq('id', profile.id)
 
@@ -69,10 +72,10 @@ export function ProfileForm({ initialProfile, initialGhostPlayers }: ProfileForm
     // Also update the player record
     await supabase
       .from('players')
-      .update({ display_name: formData.fullName || formData.username })
+      .update({ display_name: formData.fullName || normalizedUsername })
       .eq('profile_id', profile.id)
 
-    setProfile({ ...profile, full_name: formData.fullName, username: formData.username })
+    setProfile({ ...profile, full_name: formData.fullName, username: normalizedUsername })
     setEditMode(false)
     setSuccess(true)
     setSaving(false)
