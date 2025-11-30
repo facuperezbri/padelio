@@ -22,6 +22,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { EloBadge } from "@/components/ui/elo-badge";
+import { GhostPlayerBadge } from "@/components/ui/ghost-player-badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NewPlayerBadge } from "@/components/ui/new-player-badge";
@@ -1349,11 +1350,10 @@ function PlayerSlot({
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="font-medium">{player.display_name}</p>
+            {player.is_ghost && <GhostPlayerBadge />}
             <NewPlayerBadge matchesPlayed={player.matches_played || 0} />
           </div>
-          <p className="text-xs text-muted-foreground">
-            {label || (player.is_ghost ? "Invitado" : "")}
-          </p>
+          {label && <p className="text-xs text-muted-foreground">{label}</p>}
         </div>
         <EloBadge
           elo={player.elo_score}
@@ -1438,11 +1438,9 @@ function PlayerSlot({
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-medium">{p.display_name}</p>
+                      {p.is_ghost && <GhostPlayerBadge />}
                       <NewPlayerBadge matchesPlayed={p.matches_played || 0} />
                     </div>
-                    {p.is_ghost && (
-                      <p className="text-xs text-muted-foreground">Invitado</p>
-                    )}
                   </div>
                   <EloBadge
                     elo={p.elo_score}
