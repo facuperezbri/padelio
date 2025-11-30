@@ -25,6 +25,7 @@ import {
   Loader2,
   Swords,
 } from "lucide-react";
+import { PadelBallLoader } from "@/components/ui/padel-ball-loader";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
@@ -291,7 +292,7 @@ export default function ShareMatchPage({ params }: ShareMatchPageProps) {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <PadelBallLoader size="lg" />
       </div>
     );
   }

@@ -26,6 +26,7 @@ import { GhostPlayerBadge } from "@/components/ui/ghost-player-badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NewPlayerBadge } from "@/components/ui/new-player-badge";
+import { PadelBallLoader } from "@/components/ui/padel-ball-loader";
 import { PlayerAvatar } from "@/components/ui/player-avatar";
 import {
   Select,
@@ -800,7 +801,7 @@ export default function NewMatchPage() {
           onBackClick={() => handleNavigation(() => router.back())}
         />
         <div className="flex h-[60vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <PadelBallLoader size="lg" />
         </div>
       </>
     );

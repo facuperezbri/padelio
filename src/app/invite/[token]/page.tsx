@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PadelBallLoader } from "@/components/ui/padel-ball-loader";
 import { PlayerAvatar } from "@/components/ui/player-avatar";
 import { createClient } from "@/lib/supabase/client";
 import type { InvitationDetails } from "@/types/database";
@@ -128,7 +129,7 @@ export default function InvitePage({ params }: InvitePageProps) {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <PadelBallLoader size="lg" />
       </div>
     );
   }

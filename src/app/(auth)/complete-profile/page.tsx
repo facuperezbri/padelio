@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PadelBallLoader } from "@/components/ui/padel-ball-loader";
 import { PhoneInput } from "@/components/ui/phone-input";
 import {
   Select,
@@ -252,7 +253,7 @@ export default function CompleteProfilePage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <PadelBallLoader size="lg" />
       </div>
     );
   }

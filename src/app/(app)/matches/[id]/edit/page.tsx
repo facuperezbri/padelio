@@ -16,6 +16,7 @@ import {
 import { EloBadge } from "@/components/ui/elo-badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PadelBallLoader } from "@/components/ui/padel-ball-loader";
 import { PlayerAvatar } from "@/components/ui/player-avatar";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -450,7 +451,7 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
       <>
         <Header title="Editar Partido" showBack />
         <div className="flex h-[60vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <PadelBallLoader size="lg" />
         </div>
       </>
     );
