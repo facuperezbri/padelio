@@ -11,6 +11,7 @@ import { GhostPlayerBadge } from '@/components/ui/ghost-player-badge'
 import { ScoreDisplay } from '@/components/match/score-display'
 import { MapPin, Calendar, Trophy, TrendingUp, TrendingDown, Edit, Settings } from 'lucide-react'
 import type { SetScore, EloChanges, Player, MatchConfig } from '@/types/database'
+import { ShareButton } from './share-button'
 
 interface MatchDetailProps {
   params: Promise<{ id: string }>
@@ -88,13 +89,21 @@ export default async function MatchDetailPage({ params }: MatchDetailProps) {
         title="Detalle del Partido" 
         showBack
         rightAction={
-          isCreator ? (
-            <Button variant="ghost" size="icon" asChild>
-              <Link href={`/matches/${id}/edit`}>
-                <Edit className="h-5 w-5" />
-              </Link>
-            </Button>
-          ) : undefined
+          <div className="flex items-center gap-1">
+            <ShareButton
+              matchId={id}
+              matchDate={match.match_date}
+              venue={match.venue}
+              players={[player1, player2, player3, player4]}
+            />
+            {isCreator && (
+              <Button variant="ghost" size="icon" asChild>
+                <Link href={`/matches/${id}/edit`}>
+                  <Edit className="h-5 w-5" />
+                </Link>
+              </Button>
+            )}
+          </div>
         }
       />
       

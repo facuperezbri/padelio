@@ -27,6 +27,7 @@ interface WhatsAppShareDialogProps {
   matchDate: string
   venue: string
   onComplete: () => void
+  redirectOnClose?: boolean // Optional: whether to redirect on close (default: true for backward compatibility)
 }
 
 export function WhatsAppShareDialog({
@@ -38,6 +39,7 @@ export function WhatsAppShareDialog({
   matchDate,
   venue,
   onComplete,
+  redirectOnClose = true, // Default to true for backward compatibility
 }: WhatsAppShareDialogProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const router = useRouter()
@@ -46,10 +48,12 @@ export function WhatsAppShareDialog({
 
   function handleClose() {
     onComplete()
-    // Always navigate to home page when dialog closes
-    setTimeout(() => {
-      router.push('/')
-    }, 200)
+    // Only navigate to home page if redirectOnClose is true
+    if (redirectOnClose) {
+      setTimeout(() => {
+        router.push('/')
+      }, 200)
+    }
   }
 
   function getInviteLink(player: SelectedPlayer): string {
