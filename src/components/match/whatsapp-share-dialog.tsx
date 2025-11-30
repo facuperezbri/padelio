@@ -53,14 +53,12 @@ export function WhatsAppShareDialog({
   }
 
   function getInviteLink(player: SelectedPlayer): string {
-    // Find invitation for this player
-    const invitation = invitations.find(inv => inv.invited_player_id === player.id)
-    
-    if (invitation) {
-      return `${baseUrl}/invite/${invitation.invite_token}`
+    // Use public share link for all players - anyone can view and register
+    if (matchId) {
+      return `${baseUrl}/share/${matchId}`
     }
     
-    // For ghost players or players without invitations, use the match link
+    // Fallback to match link if no matchId
     return `${baseUrl}/matches/${matchId}`
   }
 
@@ -81,16 +79,15 @@ export function WhatsAppShareDialog({
     const link = getInviteLink(player)
     
     let message = `¡Hola ${player.display_name}! 🏓\n\n`
-    message += `Te invito a confirmar el partido de padel del ${dateStr} a las ${timeStr}`
+    message += `Mirá el resultado del partido de padel del ${dateStr} a las ${timeStr}`
     if (venue) {
       message += ` en ${venue}`
     }
     message += `.\n\n`
+    message += `Ver resultado y vincular tu cuenta:\n${link}`
     
-    if (invitation) {
-      message += `Confirmá tu participación acá:\n${link}`
-    } else {
-      message += `Mirá el resultado acá:\n${link}`
+    if (player.is_ghost) {
+      message += `\n\nSi sos ${player.display_name}, podés registrarte y vincular este partido a tu cuenta para trackear tus partidos.`
     }
     
     message += `\n\n¡Nos vemos en la cancha! 💪`
@@ -130,7 +127,7 @@ export function WhatsAppShareDialog({
       message += `\n📍 ${venue}`
     }
     message += `\n\n`
-    message += `Ver resultado: ${baseUrl}/matches/${matchId}`
+    message += `Ver resultado: ${baseUrl}/share/${matchId}`
     
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank')
   }

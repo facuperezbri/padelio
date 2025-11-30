@@ -49,7 +49,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function SignupPage() {
@@ -72,6 +72,7 @@ export default function SignupPage() {
     Array<{ code: string; name: string }>
   >([]);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const countries = getCountries();
 
   useEffect(() => {
@@ -176,7 +177,17 @@ export default function SignupPage() {
 
       // Redirect after successful signup
       setTimeout(() => {
-        router.push("/");
+        const redirect = searchParams.get("redirect");
+        const matchId = searchParams.get("matchId");
+
+        if (redirect && matchId) {
+          // If coming from a shared match, redirect back to share page
+          router.push(`/share/${matchId}`);
+        } else if (redirect) {
+          router.push(redirect);
+        } else {
+          router.push("/");
+        }
         router.refresh();
       }, 2000);
     } catch {
