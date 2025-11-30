@@ -29,23 +29,21 @@ async function MatchesListContent() {
   
   if (!user) return null
 
-  const { data: playerRecord, error: playerError } = await supabase
+  const { data: playerRecord } = await supabase
     .from('players')
     .select('id')
     .eq('profile_id', user.id)
     .maybeSingle()
 
-  if (playerError) {
-    console.error('Error fetching player record:', playerError)
-  }
-
   let matches: MatchWithPlayers[] = []
 
   // Solo buscar partidos donde el jugador registrado haya participado
+  // Usar exactamente la misma sintaxis que funciona en data-context.tsx
   if (playerRecord?.id) {
     const orConditions = `player_1_id.eq.${playerRecord.id},player_2_id.eq.${playerRecord.id},player_3_id.eq.${playerRecord.id},player_4_id.eq.${playerRecord.id}`
 
-    const { data, error } = await supabase
+    // Primero obtener los partidos sin joins complejos (como en data-context.tsx)
+    const { data: matchesData, error } = await supabase
       .from('matches')
       .select(`
         id,
@@ -54,29 +52,48 @@ async function MatchesListContent() {
         score_sets,
         winner_team,
         elo_changes,
-        player_1:players!matches_player_1_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id, profiles!left(avatar_url)),
-        player_2:players!matches_player_2_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id, profiles!left(avatar_url)),
-        player_3:players!matches_player_3_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id, profiles!left(avatar_url)),
-        player_4:players!matches_player_4_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id, profiles!left(avatar_url))
+        player_1:players!matches_player_1_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id),
+        player_2:players!matches_player_2_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id),
+        player_3:players!matches_player_3_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id),
+        player_4:players!matches_player_4_id_fkey(id, display_name, is_ghost, elo_score, category_label, profile_id)
       `)
       .or(orConditions)
       .order('match_date', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching matches:', error)
-      console.error('Player ID:', playerRecord.id)
-    } else {
-      console.log('Matches found:', data?.length || 0)
-    }
+    if (!error && matchesData) {
+      // Obtener los profile_ids únicos para buscar avatares
+      const profileIds = new Set<string>()
+      matchesData.forEach(match => {
+        const p1 = match.player_1 as any
+        const p2 = match.player_2 as any
+        const p3 = match.player_3 as any
+        const p4 = match.player_4 as any
+        
+        if (p1?.profile_id && !p1.is_ghost) profileIds.add(p1.profile_id)
+        if (p2?.profile_id && !p2.is_ghost) profileIds.add(p2.profile_id)
+        if (p3?.profile_id && !p3.is_ghost) profileIds.add(p3.profile_id)
+        if (p4?.profile_id && !p4.is_ghost) profileIds.add(p4.profile_id)
+      })
 
-    matches = (data || []).map(m => {
-      // Helper function to extract avatar_url from profiles join
+      // Obtener avatares de los perfiles
+      let avatarsMap: Record<string, string | null> = {}
+      if (profileIds.size > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, avatar_url')
+          .in('id', Array.from(profileIds))
+
+        if (profiles) {
+          profiles.forEach(profile => {
+            avatarsMap[profile.id] = profile.avatar_url
+          })
+        }
+      }
+
+      // Helper function to get avatar_url
       const getAvatarUrl = (player: any): string | null => {
         if (player.is_ghost || !player.profile_id) return null
-        if (Array.isArray(player.profiles)) {
-          return player.profiles[0]?.avatar_url || null
-        }
-        return player.profiles?.avatar_url || null
+        return avatarsMap[player.profile_id] || null
       }
 
       const createPlayerWithAvatar = (player: any): PlayerWithAvatar => {
@@ -87,16 +104,23 @@ async function MatchesListContent() {
         }
       }
 
-      return {
-        ...m,
-        score_sets: m.score_sets as SetScore[],
-        elo_changes: m.elo_changes as EloChanges | null,
-        player_1: createPlayerWithAvatar(m.player_1),
-        player_2: createPlayerWithAvatar(m.player_2),
-        player_3: createPlayerWithAvatar(m.player_3),
-        player_4: createPlayerWithAvatar(m.player_4),
-      }
-    })
+      matches = matchesData.map(m => {
+        const p1 = m.player_1 as any
+        const p2 = m.player_2 as any
+        const p3 = m.player_3 as any
+        const p4 = m.player_4 as any
+        
+        return {
+          ...m,
+          score_sets: m.score_sets as SetScore[],
+          elo_changes: m.elo_changes as EloChanges | null,
+          player_1: createPlayerWithAvatar(p1),
+          player_2: createPlayerWithAvatar(p2),
+          player_3: createPlayerWithAvatar(p3),
+          player_4: createPlayerWithAvatar(p4),
+        }
+      })
+    }
   }
 
   // Group matches by month

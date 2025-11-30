@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PlayerAvatar } from '@/components/ui/player-avatar'
 import { EloBadge } from '@/components/ui/elo-badge'
 import { NewPlayerBadge } from '@/components/ui/new-player-badge'
+import { GhostPlayerBadge } from '@/components/ui/ghost-player-badge'
 import { ScoreDisplay } from '@/components/match/score-display'
 import { MapPin, Calendar, Trophy, TrendingUp, TrendingDown, Edit, Settings } from 'lucide-react'
 import type { SetScore, EloChanges, Player, MatchConfig } from '@/types/database'
@@ -25,29 +26,50 @@ export default async function MatchDetailPage({ params }: MatchDetailProps) {
     redirect('/login')
   }
 
-  const { data: match } = await supabase
+  // Primero obtener el partido sin joins complejos de profiles
+  const { data: match, error: matchError } = await supabase
     .from('matches')
     .select(`
       *,
-      player_1:players!matches_player_1_id_fkey(*, profiles!left(avatar_url)),
-      player_2:players!matches_player_2_id_fkey(*, profiles!left(avatar_url)),
-      player_3:players!matches_player_3_id_fkey(*, profiles!left(avatar_url)),
-      player_4:players!matches_player_4_id_fkey(*, profiles!left(avatar_url))
+      player_1:players!matches_player_1_id_fkey(*),
+      player_2:players!matches_player_2_id_fkey(*),
+      player_3:players!matches_player_3_id_fkey(*),
+      player_4:players!matches_player_4_id_fkey(*)
     `)
     .eq('id', id)
     .single()
 
-  if (!match) {
+  if (matchError || !match) {
     notFound()
   }
 
-  // Helper function to extract avatar_url from profiles join
+  // Obtener avatares por separado
+  const profileIds = new Set<string>()
+  const players = [match.player_1, match.player_2, match.player_3, match.player_4] as any[]
+  players.forEach(player => {
+    if (player?.profile_id && !player.is_ghost) {
+      profileIds.add(player.profile_id)
+    }
+  })
+
+  let avatarsMap: Record<string, string | null> = {}
+  if (profileIds.size > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, avatar_url')
+      .in('id', Array.from(profileIds))
+
+    if (profiles) {
+      profiles.forEach(profile => {
+        avatarsMap[profile.id] = profile.avatar_url
+      })
+    }
+  }
+
+  // Helper function to get avatar_url
   const getAvatarUrl = (player: any): string | null => {
     if (player.is_ghost || !player.profile_id) return null
-    if (Array.isArray(player.profiles)) {
-      return player.profiles[0]?.avatar_url || null
-    }
-    return player.profiles?.avatar_url || null
+    return avatarsMap[player.profile_id] || null
   }
 
   const scoreSets = match.score_sets as SetScore[]
@@ -219,9 +241,7 @@ function PlayerRow({ player, eloChange, won }: PlayerRowProps) {
       <div className="flex-1">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="font-medium">{player.display_name}</p>
-          {player.is_ghost && (
-            <span className="text-xs text-muted-foreground">Invitado</span>
-          )}
+          {player.is_ghost && <GhostPlayerBadge />}
           <NewPlayerBadge matchesPlayed={player.matches_played || 0} />
         </div>
       </div>

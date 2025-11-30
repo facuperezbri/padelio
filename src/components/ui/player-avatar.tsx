@@ -44,14 +44,10 @@ export function PlayerAvatar({
     <Avatar className={cn(sizeClasses[size], className)}>
       {avatarUrl && <AvatarImage src={avatarUrl} alt={name} />}
       <AvatarFallback className={cn(isGhost && 'bg-muted')}>
-        {isGhost ? (
-          <Ghost className={cn(iconSizes[size], 'text-muted-foreground')} />
-        ) : (
-          <span className={cn(
-            size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : size === 'lg' ? 'text-base' : 'text-lg',
-            'font-medium'
-          )}>{getInitials(name)}</span>
-        )}
+        <span className={cn(
+          size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : size === 'lg' ? 'text-base' : 'text-lg',
+          'font-medium'
+        )}>{getInitials(name)}</span>
       </AvatarFallback>
     </Avatar>
   )
