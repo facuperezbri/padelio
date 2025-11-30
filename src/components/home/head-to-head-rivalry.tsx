@@ -56,8 +56,33 @@ export function HeadToHeadRivalry() {
     )
   }
 
+  // Si no hay datos, mostrar estado vacío
   if (!currentPlayerId || !opponent) {
-    return null
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Swords className="h-4 w-4" />
+              Rivalidad Principal
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Swords className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm font-medium text-foreground">
+              No hay partidos registrados
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Registrá partidos para ver tus rivalidades
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (

@@ -164,6 +164,10 @@ export default function NewMatchPage() {
   const [newGhostCategory, setNewGhostCategory] =
     useState<PlayerCategory>("8va");
   const [creatingGhost, setCreatingGhost] = useState(false);
+  const [ghostFormErrors, setGhostFormErrors] = useState<{
+    name?: string;
+    category?: string;
+  }>({});
 
   // WhatsApp share
   const [showShareDialog, setShowShareDialog] = useState(false);
@@ -458,8 +462,25 @@ export default function NewMatchPage() {
   }
 
   async function handleCreateGhost() {
-    if (!newGhostName.trim() || !ghostPosition) return;
+    // Validar todos los campos
+    const errors: { name?: string; category?: string } = {};
 
+    if (!newGhostName.trim()) {
+      errors.name = "El nombre es requerido";
+    }
+
+    if (!newGhostCategory) {
+      errors.category = "La categoría es requerida";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setGhostFormErrors(errors);
+      return;
+    }
+
+    if (!ghostPosition) return;
+
+    setGhostFormErrors({});
     setCreatingGhost(true);
 
     const {
@@ -499,6 +520,7 @@ export default function NewMatchPage() {
     setNewGhostCategory("8va");
     setGhostPosition(null);
     setCreatingGhost(false);
+    setGhostFormErrors({});
   }
 
   function handleSetScoreChange(
@@ -1200,7 +1222,18 @@ export default function NewMatchPage() {
         </Button>
 
         {/* Ghost Player Dialog */}
-        <Dialog open={showGhostDialog} onOpenChange={setShowGhostDialog}>
+        <Dialog
+          open={showGhostDialog}
+          onOpenChange={(open) => {
+            setShowGhostDialog(open);
+            if (!open) {
+              // Limpiar errores y resetear formulario al cerrar
+              setGhostFormErrors({});
+              setNewGhostName("");
+              setNewGhostCategory("8va");
+            }
+          }}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Crear Jugador Invitado</DialogTitle>
@@ -1210,23 +1243,49 @@ export default function NewMatchPage() {
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label>Nombre</Label>
+                <Label htmlFor="ghost-name">Nombre *</Label>
                 <Input
+                  id="ghost-name"
                   placeholder="Nombre del jugador"
                   value={newGhostName}
-                  onChange={(e) => setNewGhostName(e.target.value)}
+                  onChange={(e) => {
+                    setNewGhostName(e.target.value);
+                    if (ghostFormErrors.name) {
+                      setGhostFormErrors((prev) => ({
+                        ...prev,
+                        name: undefined,
+                      }));
+                    }
+                  }}
+                  className={ghostFormErrors.name ? "border-destructive" : ""}
                 />
+                {ghostFormErrors.name && (
+                  <p className="text-sm text-destructive">
+                    {ghostFormErrors.name}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label>Categoría Estimada</Label>
+                <Label htmlFor="ghost-category">Categoría Estimada *</Label>
                 <Select
                   value={newGhostCategory}
-                  onValueChange={(v) =>
-                    setNewGhostCategory(v as PlayerCategory)
-                  }
+                  onValueChange={(v) => {
+                    setNewGhostCategory(v as PlayerCategory);
+                    if (ghostFormErrors.category) {
+                      setGhostFormErrors((prev) => ({
+                        ...prev,
+                        category: undefined,
+                      }));
+                    }
+                  }}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
+                  <SelectTrigger
+                    id="ghost-category"
+                    className={
+                      ghostFormErrors.category ? "border-destructive" : ""
+                    }
+                  >
+                    <SelectValue placeholder="Selecciona una categoría" />
                   </SelectTrigger>
                   <SelectContent>
                     {CATEGORIES.map((cat) => (
@@ -1236,11 +1295,19 @@ export default function NewMatchPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                {ghostFormErrors.category && (
+                  <p className="text-sm text-destructive">
+                    {ghostFormErrors.category}
+                  </p>
+                )}
               </div>
               <Button
+                variant="secondary"
                 className="w-full"
                 onClick={handleCreateGhost}
-                disabled={!newGhostName.trim() || creatingGhost}
+                disabled={
+                  !newGhostName.trim() || !newGhostCategory || creatingGhost
+                }
               >
                 {creatingGhost && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

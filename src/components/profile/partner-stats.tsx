@@ -108,17 +108,33 @@ export function PartnerStatsComponent({ playerId, filterPartnerId, limit, showVi
     return (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="h-4 w-4" />
-            {filterPartnerId ? 'Química conmigo' : 'Química de Pareja'}
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Users className="h-4 w-4" />
+              {filterPartnerId ? 'Química conmigo' : 'Química de Pareja'}
+            </CardTitle>
+            {showViewAllLink && (
+              <Link
+                href="/partner-chemistry"
+                className="text-sm text-primary hover:underline"
+              >
+                Ver todos
+              </Link>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            {filterPartnerId 
-              ? 'Aún no han jugado partidos juntos.'
-              : 'Aún no has jugado partidos con compañeros registrados.'}
-          </p>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Users className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm font-medium text-foreground">
+              No hay partidos registrados
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Registrá partidos para ver tu química de pareja
+            </p>
+          </div>
         </CardContent>
       </Card>
     )
