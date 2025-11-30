@@ -53,7 +53,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           .from('global_ranking')
           .select('rank')
           .eq('id', user.id)
-          .single()
+          .maybeSingle()
       ])
 
       const profile = profileResult.data as Profile | null
@@ -66,7 +66,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           .from('players')
           .select('id')
           .eq('profile_id', user.id)
-          .single()
+          .maybeSingle()
 
         if (playerRecord) {
           const { data: matches } = await supabase
