@@ -34,6 +34,7 @@ import {
   Phone,
   Swords,
   User,
+  Users,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -47,6 +48,7 @@ export default function CompleteProfilePage() {
     province: "",
     phone: "",
     email: "",
+    gender: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,7 +92,8 @@ export default function CompleteProfilePage() {
       profile.country &&
       profile.province &&
       (profile.email || user.email) &&
-      profile.phone
+      profile.phone &&
+      profile.gender
     ) {
       // Profile already complete, redirect
       router.push("/");
@@ -113,6 +116,7 @@ export default function CompleteProfilePage() {
       phone: oauthPhone || "",
       country: metadata.country || "",
       province: metadata.province || metadata.state || "",
+      gender: metadata.gender || "",
     });
 
     // Load provinces if country is set
@@ -167,6 +171,7 @@ export default function CompleteProfilePage() {
         category_label: formData.category,
         country: formData.country || null,
         province: formData.province || null,
+        gender: formData.gender || null,
       };
 
       // Only update email/phone if they were provided (not from OAuth)
@@ -409,6 +414,31 @@ export default function CompleteProfilePage() {
                 </div>
               </div>
             )}
+
+            <div className="space-y-2">
+              <Label htmlFor="gender">Género</Label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Select
+                  value={formData.gender}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, gender: value })
+                  }
+                >
+                  <SelectTrigger className="pl-10">
+                    <SelectValue placeholder="Selecciona tu género" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Masculino">Masculino</SelectItem>
+                    <SelectItem value="Femenino">Femenino</SelectItem>
+                    <SelectItem value="Otro">Otro</SelectItem>
+                    <SelectItem value="Prefiero no decir">
+                      Prefiero no decir
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
             <Button type="submit" className="w-full" disabled={saving}>
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

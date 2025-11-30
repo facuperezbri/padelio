@@ -25,6 +25,7 @@ export interface Database {
           province: string | null
           phone: string | null
           email: string | null
+          gender: string | null
           created_at: string
           updated_at: string
         }
@@ -41,6 +42,7 @@ export interface Database {
           province?: string | null
           phone?: string | null
           email?: string | null
+          gender?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -57,6 +59,7 @@ export interface Database {
           province?: string | null
           phone?: string | null
           email?: string | null
+          gender?: string | null
           created_at?: string
           updated_at?: string
         }

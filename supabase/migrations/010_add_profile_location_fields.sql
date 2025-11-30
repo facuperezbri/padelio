@@ -9,7 +9,8 @@ ALTER TABLE profiles
 ADD COLUMN IF NOT EXISTS country TEXT,
 ADD COLUMN IF NOT EXISTS province TEXT,
 ADD COLUMN IF NOT EXISTS phone TEXT,
-ADD COLUMN IF NOT EXISTS email TEXT;
+ADD COLUMN IF NOT EXISTS email TEXT,
+ADD COLUMN IF NOT EXISTS gender TEXT;
 
 -- Create index on country for filtering
 CREATE INDEX IF NOT EXISTS idx_profiles_country ON profiles(country);
@@ -22,4 +23,5 @@ COMMENT ON COLUMN profiles.country IS 'Country code (ISO 3166-1 alpha-2) or name
 COMMENT ON COLUMN profiles.province IS 'Province/State name';
 COMMENT ON COLUMN profiles.phone IS 'Phone number';
 COMMENT ON COLUMN profiles.email IS 'Email address (can be synced from auth.users)';
+COMMENT ON COLUMN profiles.gender IS 'Gender: Masculino, Femenino, Otro, Prefiero no decir';
 

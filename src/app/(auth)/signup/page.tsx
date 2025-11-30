@@ -36,6 +36,7 @@ import {
   Phone,
   Swords,
   User,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -51,6 +52,7 @@ export default function SignupPage() {
     country: "",
     province: "",
     phone: "",
+    gender: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -134,6 +136,7 @@ export default function SignupPage() {
             country: formData.country || null,
             province: formData.province || null,
             phone: formData.phone || null,
+            gender: formData.gender || null,
           })
           .eq("id", user.id);
 
@@ -370,6 +373,31 @@ export default function SignupPage() {
                     className="pl-10"
                     required
                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="gender">Género</Label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Select
+                    value={formData.gender}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, gender: value })
+                    }
+                  >
+                    <SelectTrigger className="pl-10">
+                      <SelectValue placeholder="Selecciona tu género" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Masculino">Masculino</SelectItem>
+                      <SelectItem value="Femenino">Femenino</SelectItem>
+                      <SelectItem value="Otro">Otro</SelectItem>
+                      <SelectItem value="Prefiero no decir">
+                        Prefiero no decir
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

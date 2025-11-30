@@ -55,7 +55,7 @@ export async function GET(request: Request) {
       // Try to get profile, create if it doesn't exist
       let { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("category_label, country, province, email, phone")
+        .select("category_label, country, province, email, phone, gender")
         .eq("id", user.id)
         .single();
 
@@ -99,7 +99,8 @@ export async function GET(request: Request) {
         profile.country &&
         profile.province &&
         (profile.email || user.email) &&
-        profile.phone;
+        profile.phone &&
+        profile.gender;
 
       if (!hasRequiredFields) {
         return NextResponse.redirect(`${origin}/complete-profile`);
