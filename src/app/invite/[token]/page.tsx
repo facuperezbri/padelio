@@ -235,6 +235,7 @@ export default function InvitePage({ params }: InvitePageProps) {
   const timeStr = matchDateTime.toLocaleTimeString("es-AR", {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 
   return (

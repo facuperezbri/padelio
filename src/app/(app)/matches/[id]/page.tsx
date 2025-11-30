@@ -98,6 +98,7 @@ export default async function MatchDetailPage({ params }: MatchDetailProps) {
             {new Date(match.match_date).toLocaleTimeString('es-AR', {
               hour: '2-digit',
               minute: '2-digit',
+              hour12: false,
             })}
           </span>
           {match.venue && (

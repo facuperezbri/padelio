@@ -62,6 +62,7 @@ export function WhatsAppShareDialog({
     const timeStr = matchDateTime.toLocaleTimeString('es-AR', {
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     })
     
     const invitation = invitations.find(inv => inv.invited_player_id === player.id)
@@ -108,6 +109,7 @@ export function WhatsAppShareDialog({
     const timeStr = matchDateTime.toLocaleTimeString('es-AR', {
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     })
     
     let message = `¡Partido de padel registrado! 🏓\n\n`
