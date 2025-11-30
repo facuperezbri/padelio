@@ -835,16 +835,16 @@ export default function NewMatchPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0 overflow-hidden">
                 <Label>Fecha</Label>
                 <Input
                   type="date"
                   value={matchDate}
                   onChange={(e) => setMatchDate(e.target.value)}
-                  className="w-full"
+                  className="w-full max-w-full"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0 overflow-hidden">
                 <Label>Hora</Label>
                 <Input
                   type="time"
@@ -856,7 +856,7 @@ export default function NewMatchPage() {
                     setMatchTime(roundedTime);
                   }}
                   step="1800"
-                  className="w-full"
+                  className="w-full max-w-full"
                 />
               </div>
             </div>
@@ -877,7 +877,7 @@ export default function NewMatchPage() {
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div className="space-y-0.5">
-                  <Label className="text-sm font-medium">Golden Point</Label>
+                  <Label className="text-sm font-medium">Punto de Oro</Label>
                   <p className="text-xs text-muted-foreground">
                     Sin ventaja en los games (40-40 = punto de oro)
                   </p>
