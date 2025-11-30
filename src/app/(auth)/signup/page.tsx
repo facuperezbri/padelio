@@ -514,10 +514,6 @@ export default function SignupPage() {
                     <SelectContent>
                       <SelectItem value="Masculino">Masculino</SelectItem>
                       <SelectItem value="Femenino">Femenino</SelectItem>
-                      <SelectItem value="Otro">Otro</SelectItem>
-                      <SelectItem value="Prefiero no decir">
-                        Prefiero no decir
-                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

@@ -266,6 +266,7 @@ export interface Database {
           category_label: PlayerCategory
           matches_played: number
           matches_won: number
+          gender: string | null
           win_rate: number
           rank: number
         }

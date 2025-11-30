@@ -533,6 +533,7 @@ SELECT
   p.category_label,
   p.matches_played,
   p.matches_won,
+  p.gender,
   CASE WHEN p.matches_played > 0 
     THEN ROUND((p.matches_won::numeric / p.matches_played::numeric) * 100, 1)
     ELSE 0 

@@ -23,5 +23,5 @@ COMMENT ON COLUMN profiles.country IS 'Country code (ISO 3166-1 alpha-2) or name
 COMMENT ON COLUMN profiles.province IS 'Province/State name';
 COMMENT ON COLUMN profiles.phone IS 'Phone number';
 COMMENT ON COLUMN profiles.email IS 'Email address (can be synced from auth.users)';
-COMMENT ON COLUMN profiles.gender IS 'Gender: Masculino, Femenino, Otro, Prefiero no decir';
+COMMENT ON COLUMN profiles.gender IS 'Gender: Masculino or Femenino only (for ranking filters)';
 
