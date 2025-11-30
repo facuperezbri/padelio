@@ -511,13 +511,14 @@ export default function NewMatchPage() {
       setSetInputValues(newInputValues);
 
       const newSets = [...sets];
-      newSets[setIndex] = {
+      const updatedSet = {
         ...newSets[setIndex],
         [team]: 0,
         isTiebreak: matchConfig.superTiebreak && setIndex === 2,
       };
+      newSets[setIndex] = updatedSet;
       setSets(newSets);
-      validateSet(setIndex, team, 0);
+      validateSet(setIndex, team, 0, updatedSet);
       return;
     }
 
@@ -538,15 +539,16 @@ export default function NewMatchPage() {
 
     // Update sets
     const newSets = [...sets];
-    newSets[setIndex] = {
+    const updatedSet = {
       ...newSets[setIndex],
       [team]: numValue,
       isTiebreak: isSuperTiebreak,
     };
+    newSets[setIndex] = updatedSet;
     setSets(newSets);
 
-    // Validate this set
-    validateSet(setIndex, team, numValue);
+    // Validate this set with the updated set values
+    validateSet(setIndex, team, numValue, updatedSet);
 
     // Auto-add third set if first two sets are won by different teams
     if (newSets.length === 2 && canPlayThirdSet(newSets)) {
@@ -572,9 +574,11 @@ export default function NewMatchPage() {
   function validateSet(
     setIndex: number,
     team: "team1" | "team2",
-    value: number
+    value: number,
+    updatedSet?: SetScore
   ) {
-    const set = sets[setIndex];
+    // Use the updated set if provided, otherwise use current state
+    const set = updatedSet || sets[setIndex];
     const isSuperTiebreak = matchConfig.superTiebreak && setIndex === 2;
     const otherTeam = team === "team1" ? "team2" : "team1";
     const otherValue = set[otherTeam];
@@ -584,20 +588,23 @@ export default function NewMatchPage() {
       newSetErrors[setIndex] = {};
     }
 
-    // Validate the set score
-    const isValid = isValidSetScore(
-      team === "team1" ? value : set.team1,
-      team === "team2" ? value : set.team2,
-      isSuperTiebreak
-    );
+    // Validate the set score using the updated values
+    const team1Score = team === "team1" ? value : set.team1;
+    const team2Score = team === "team2" ? value : set.team2;
+    const isValid = isValidSetScore(team1Score, team2Score, isSuperTiebreak);
 
-    if (!isValid && value > 0 && otherValue > 0) {
+    // Clear errors for both teams first
+    delete newSetErrors[setIndex][team];
+    delete newSetErrors[setIndex][otherTeam];
+
+    // Only show error if both values are set (> 0) and the combination is invalid
+    if (!isValid && team1Score > 0 && team2Score > 0) {
       const setLabel = isSuperTiebreak
         ? "Super Tiebreak"
         : `Set ${setIndex + 1}`;
-      newSetErrors[setIndex][team] = `Resultado inválido en ${setLabel}`;
-    } else {
-      delete newSetErrors[setIndex][team];
+      const errorMessage = `Resultado inválido en ${setLabel}`;
+      newSetErrors[setIndex][team] = errorMessage;
+      newSetErrors[setIndex][otherTeam] = errorMessage;
     }
 
     setSetErrors(newSetErrors);
