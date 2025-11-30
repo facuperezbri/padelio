@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   Select,
   SelectContent,
@@ -485,20 +486,15 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="phone">Teléfono</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+54 9 11 1234-5678"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    className="pl-10"
-                    required
-                  />
-                </div>
+                <PhoneInput
+                  id="phone"
+                  placeholder="+54 9 11 1234-5678"
+                  value={formData.phone || undefined}
+                  onChange={(value) =>
+                    setFormData({ ...formData, phone: value || "" })
+                  }
+                  required
+                />
               </div>
 
               <div className="space-y-2">

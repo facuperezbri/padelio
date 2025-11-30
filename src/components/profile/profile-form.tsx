@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Check, Ghost, Trash2 } from 'lucide-react'
 import {
@@ -269,17 +270,12 @@ export function ProfileForm({ initialProfile, initialGhostPlayers }: ProfileForm
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Teléfono</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+54 9 11 1234-5678"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="pl-10"
-                    />
-                  </div>
+                  <PhoneInput
+                    id="phone"
+                    placeholder="+54 9 11 1234-5678"
+                    value={formData.phone || undefined}
+                    onChange={(value) => setFormData({ ...formData, phone: value || '' })}
+                  />
                 </div>
 
                 <div className="space-y-2">
