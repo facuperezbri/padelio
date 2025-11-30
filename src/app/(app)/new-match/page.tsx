@@ -784,13 +784,10 @@ export default function NewMatchPage() {
     }
   }
 
-  async function handleShareComplete() {
+  function handleShareComplete() {
+    // Close dialog immediately for instant visual feedback
+    // The onOpenChange handler will take care of executing heavy operations
     setShowShareDialog(false);
-    // Refresh stats to show the new match
-    await refreshStats();
-    resetForm();
-    router.push("/");
-    router.refresh();
   }
 
   if (loading) {
@@ -1256,14 +1253,19 @@ export default function NewMatchPage() {
         {/* WhatsApp Share Dialog */}
         <WhatsAppShareDialog
           open={showShareDialog}
-          onOpenChange={async (open) => {
+          onOpenChange={(open) => {
+            // Close dialog immediately for instant visual feedback
             setShowShareDialog(open);
+            
+            // Execute heavy operations after dialog closes (only if closed and match was created)
             if (!open && success) {
-              // If dialog is closed and match was successfully created, refresh stats and reset form
-              await refreshStats();
-              resetForm();
-              router.replace("/");
-              router.refresh();
+              setTimeout(async () => {
+                // If dialog is closed and match was successfully created, refresh stats and reset form
+                await refreshStats();
+                resetForm();
+                router.replace("/");
+                router.refresh();
+              }, 200); // Small delay to allow dialog close animation
             }
           }}
           matchId={createdMatchId}
