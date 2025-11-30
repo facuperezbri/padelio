@@ -904,7 +904,6 @@ export default function NewMatchPage() {
                   setGhostPosition(pos);
                   setShowGhostDialog(true);
                 }}
-                label="Equipo 1 - Revés"
               />
             </CardContent>
           </Card>
@@ -937,7 +936,6 @@ export default function NewMatchPage() {
                   setGhostPosition(pos);
                   setShowGhostDialog(true);
                 }}
-                label="Equipo 2 - Drive"
               />
               <PlayerSlot
                 player={team2Player2}
@@ -949,7 +947,6 @@ export default function NewMatchPage() {
                   setGhostPosition(pos);
                   setShowGhostDialog(true);
                 }}
-                label="Equipo 2 - Revés"
               />
             </CardContent>
           </Card>
