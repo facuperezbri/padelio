@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { WhatsAppShareDialog } from "@/components/match/whatsapp-share-dialog";
@@ -37,13 +37,7 @@ export function ShareButton({
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
 
-  useEffect(() => {
-    if (showDialog) {
-      loadInvitations();
-    }
-  }, [showDialog, matchId]);
-
-  async function loadInvitations() {
+  const loadInvitations = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await supabase
@@ -59,7 +53,13 @@ export function ShareButton({
     } finally {
       setLoading(false);
     }
-  }
+  }, [matchId, supabase]);
+
+  useEffect(() => {
+    if (showDialog) {
+      loadInvitations();
+    }
+  }, [showDialog, loadInvitations]);
 
   return (
     <>
