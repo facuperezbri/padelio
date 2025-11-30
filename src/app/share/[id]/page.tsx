@@ -92,18 +92,27 @@ export default function ShareMatchPage({ params }: ShareMatchPageProps) {
 
       if (rpcError) {
         console.error("RPC Error:", rpcError);
-        setError("Error al cargar el partido: " + rpcError.message);
+        // More specific error handling
+        if (rpcError.message.includes("structure of query")) {
+          setError("Error al cargar el partido. Por favor, intentá nuevamente.");
+        } else {
+          setError("Error al cargar el partido: " + rpcError.message);
+        }
         setLoading(false);
         return;
       }
 
-      if (!matchDataRPC || !Array.isArray(matchDataRPC) || matchDataRPC.length === 0) {
+      // Handle case where function returns null or empty array
+      if (!matchDataRPC) {
         setError("Partido no encontrado");
         setLoading(false);
         return;
       }
 
-      const matchData = matchDataRPC[0];
+      // RPC functions can return single object or array depending on implementation
+      const matchData = Array.isArray(matchDataRPC) 
+        ? (matchDataRPC.length > 0 ? matchDataRPC[0] : null)
+        : matchDataRPC;
       
       if (!matchData || !matchData.id) {
         setError("Partido no encontrado");
