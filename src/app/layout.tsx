@@ -19,7 +19,7 @@ const fontMono = {
 export const metadata: Metadata = {
   title: "Padelio",
   description:
-    "Track your padel matches, calculate ELO rankings, and compete with friends",
+    "Track your padel matches, calculate score rankings, and compete with friends",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

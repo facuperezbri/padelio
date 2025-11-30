@@ -484,7 +484,7 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
           <Alert>
             <AlertDescription className="flex items-center gap-2">
               <Check className="h-4 w-4" />
-              ¡Partido actualizado! Los ELOs fueron recalculados.
+              ¡Partido actualizado! Los puntajes fueron recalculados.
             </AlertDescription>
           </Alert>
         )}
@@ -493,7 +493,7 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            Editar el partido recalculará los ELOs de todos los jugadores.
+            Editar el partido recalculará los puntajes de todos los jugadores.
           </AlertDescription>
         </Alert>
 
@@ -752,8 +752,8 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
               <DialogHeader>
                 <DialogTitle>¿Eliminar partido?</DialogTitle>
                 <DialogDescription>
-                  Esta acción no se puede deshacer. Los ELOs de los jugadores
-                  serán restaurados.
+                  Esta acción no se puede deshacer. Los puntajes de los
+                  jugadores serán restaurados.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>

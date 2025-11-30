@@ -310,7 +310,7 @@ export default function SignupPage() {
                     </DialogTrigger>
                     <DialogContent className="max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle>Sistema de Puntuación ELO</DialogTitle>
+                        <DialogTitle>Sistema de Puntuación</DialogTitle>
                         <DialogDescription>
                           Cómo funciona el sistema de puntuación en Padelio
                         </DialogDescription>
@@ -318,12 +318,12 @@ export default function SignupPage() {
                       <div className="space-y-4 text-sm">
                         <div>
                           <h3 className="font-semibold mb-2">
-                            ¿Qué es el ELO?
+                            ¿Qué es el puntaje?
                           </h3>
                           <p className="text-muted-foreground">
-                            El ELO es un sistema de puntuación que refleja tu
-                            nivel de juego. Cuanto más alto sea tu ELO, mejor
-                            jugador sos considerado.
+                            El puntaje es un número que refleja tu nivel de
+                            juego. Cuanto más alto sea tu puntaje, mejor jugador
+                            sos considerado.
                           </p>
                         </div>
 
@@ -348,17 +348,18 @@ export default function SignupPage() {
 
                         <div>
                           <h3 className="font-semibold mb-2">
-                            ¿Cómo cambia mi ELO?
+                            ¿Cómo cambia mi puntaje?
                           </h3>
                           <p className="text-muted-foreground mb-2">
-                            Después de cada partido, tu ELO se actualiza según:
+                            Después de cada partido, tu puntaje se actualiza
+                            según:
                           </p>
                           <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
                             <li>
-                              <strong>Si ganaste:</strong> Tu ELO aumenta
+                              <strong>Si ganaste:</strong> Tu puntaje aumenta
                             </li>
                             <li>
-                              <strong>Si perdiste:</strong> Tu ELO disminuye
+                              <strong>Si perdiste:</strong> Tu puntaje disminuye
                             </li>
                             <li>
                               <strong>El nivel del oponente:</strong> Ganar
@@ -378,7 +379,7 @@ export default function SignupPage() {
                           </h3>
                           <p className="text-muted-foreground">
                             Tu categoría se actualiza automáticamente según tu
-                            ELO:
+                            puntaje:
                           </p>
                           <div className="mt-2 space-y-1 text-muted-foreground text-xs">
                             <div>• Menos de 1100 pts → 8va Categoría</div>
@@ -395,8 +396,8 @@ export default function SignupPage() {
                         <div className="pt-2 border-t">
                           <p className="text-xs text-muted-foreground">
                             <strong>Tip:</strong> Seleccioná la categoría que
-                            mejor represente tu nivel actual. Tu ELO se ajustará
-                            automáticamente mientras jugás partidos.
+                            mejor represente tu nivel actual. Tu puntaje se
+                            ajustará automáticamente mientras jugás partidos.
                           </p>
                         </div>
                       </div>
@@ -429,8 +430,8 @@ export default function SignupPage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Tu ELO inicial será de {CATEGORY_ELO_MAP[formData.category]}{" "}
-                  puntos
+                  Tu puntaje inicial será de{" "}
+                  {CATEGORY_ELO_MAP[formData.category]} puntos
                 </p>
               </div>
 

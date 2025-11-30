@@ -301,7 +301,7 @@ export default function InvitePage({ params }: InvitePageProps) {
                 >
                   Iniciá sesión
                 </Link>{" "}
-                para vincular este partido a tu cuenta y trackear tu ELO.
+                para vincular este partido a tu cuenta y trackear tu puntaje.
               </AlertDescription>
             </Alert>
           )}

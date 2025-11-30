@@ -142,7 +142,7 @@ async function MatchesListContent() {
         </div>
         <h2 className="mb-2 text-lg font-semibold">Sin partidos aún</h2>
         <p className="mb-6 text-sm text-muted-foreground">
-          Registrá tu primer partido para empezar a trackear tu ELO
+          Registrá tu primer partido para empezar a trackear tu puntaje
         </p>
         <Link
           href="/new-match"

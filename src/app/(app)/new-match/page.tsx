@@ -820,7 +820,7 @@ export default function NewMatchPage() {
           <Alert>
             <AlertDescription className="flex items-center gap-2">
               <Check className="h-4 w-4" />
-              ¡Partido guardado! Los ELOs fueron actualizados.
+              ¡Partido guardado! Los puntajes fueron actualizados.
             </AlertDescription>
           </Alert>
         )}
