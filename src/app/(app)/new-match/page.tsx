@@ -816,15 +816,6 @@ export default function NewMatchPage() {
           </Alert>
         )}
 
-        {savingMatch && (
-          <Alert>
-            <AlertDescription className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Guardando partido...
-            </AlertDescription>
-          </Alert>
-        )}
-
         {success && !showShareDialog && (
           <Alert>
             <AlertDescription className="flex items-center gap-2">
@@ -1286,6 +1277,21 @@ export default function NewMatchPage() {
           venue={venue}
           onComplete={handleShareComplete}
         />
+
+        {/* Saving Match Loading Modal */}
+        <Dialog open={savingMatch} onOpenChange={() => {}}>
+          <DialogContent className="max-w-sm border-0 bg-transparent shadow-none [&>button]:hidden">
+            <div className="flex flex-col items-center gap-4 rounded-lg bg-background p-8 shadow-lg">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <div className="text-center">
+                <p className="text-lg font-semibold">Guardando partido...</p>
+                <p className="text-sm text-muted-foreground">
+                  Por favor esperá un momento
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Exit Confirmation Dialog */}
         <Dialog

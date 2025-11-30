@@ -77,19 +77,39 @@ export default function ShareMatchPage({ params }: ShareMatchPageProps) {
       setIsLoggedIn(!!user);
       setUserId(user?.id || null);
 
+      // Validate ID format (should be UUID)
+      if (!id || typeof id !== "string" || id.length !== 36) {
+        setError("ID de partido inválido");
+        setLoading(false);
+        return;
+      }
+
       // Get match data using RPC function for public access
       const { data: matchDataRPC, error: rpcError } = await supabase.rpc(
         "get_match_by_id",
         { match_id: id }
       );
 
-      if (rpcError || !matchDataRPC || matchDataRPC.length === 0) {
+      if (rpcError) {
+        console.error("RPC Error:", rpcError);
+        setError("Error al cargar el partido: " + rpcError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!matchDataRPC || !Array.isArray(matchDataRPC) || matchDataRPC.length === 0) {
         setError("Partido no encontrado");
         setLoading(false);
         return;
       }
 
       const matchData = matchDataRPC[0];
+      
+      if (!matchData || !matchData.id) {
+        setError("Partido no encontrado");
+        setLoading(false);
+        return;
+      }
 
       // Get players separately (now publicly accessible)
       const { data: playersData, error: playersError } = await supabase
@@ -102,7 +122,15 @@ export default function ShareMatchPage({ params }: ShareMatchPageProps) {
           matchData.player_4_id,
         ]);
 
-      if (playersError || !playersData || playersData.length !== 4) {
+      if (playersError) {
+        console.error("Players Error:", playersError);
+        setError("Error al cargar los jugadores: " + playersError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!playersData || playersData.length !== 4) {
+        console.error("Players data incomplete:", playersData);
         setError("Error al cargar los jugadores");
         setLoading(false);
         return;

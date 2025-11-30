@@ -39,6 +39,11 @@ BEGIN
     m.player_4_id
   FROM matches m
   WHERE m.id = match_id;
+  
+  -- If no rows returned, return empty result (don't raise error)
+  IF NOT FOUND THEN
+    RETURN;
+  END IF;
 END;
 $$;
 
