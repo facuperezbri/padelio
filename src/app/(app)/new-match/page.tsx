@@ -368,10 +368,11 @@ export default function NewMatchPage() {
       .order("display_name");
 
     // Query 2: Ghost players created by current user
+    // Note: Ghost players don't have profile_id, so we don't join with profiles
     const { data: ghostPlayers } = await supabase
       .from("players")
       .select(
-        "id, display_name, is_ghost, elo_score, category_label, profile_id, profiles!left(avatar_url)"
+        "id, display_name, is_ghost, elo_score, category_label, profile_id"
       )
       .eq("is_ghost", true)
       .eq("created_by_user_id", user.id)
@@ -382,14 +383,20 @@ export default function NewMatchPage() {
 
     // Map players to include avatar_url
     const playersWithAvatars = (players || []).map((player) => {
+      // For non-ghost players, extract avatar_url from profiles join
+      // For ghost players, avatar_url will be null (they don't have profiles)
       const playerWithAvatar = {
         ...player,
-        avatar_url: Array.isArray(player.profiles)
-          ? (player.profiles[0] as any)?.avatar_url || null
-          : (player.profiles as any)?.avatar_url || null,
+        avatar_url: player.is_ghost
+          ? null
+          : Array.isArray((player as any).profiles)
+          ? ((player as any).profiles[0] as any)?.avatar_url || null
+          : ((player as any).profiles as any)?.avatar_url || null,
       };
-      // Remove the profiles object
-      delete (playerWithAvatar as any).profiles;
+      // Remove the profiles object if it exists
+      if ((playerWithAvatar as any).profiles) {
+        delete (playerWithAvatar as any).profiles;
+      }
       return playerWithAvatar;
     });
 
