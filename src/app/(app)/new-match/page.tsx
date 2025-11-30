@@ -621,14 +621,6 @@ export default function NewMatchPage() {
     }
   }
 
-  function removeSet() {
-    if (sets.length > 2) {
-      setSets(sets.slice(0, -1));
-      setSetInputValues((prev) => prev.slice(0, -1));
-      setSetErrors((prev) => prev.slice(0, -1));
-    }
-  }
-
   useEffect(() => {
     let team1Sets = 0;
     let team2Sets = 0;
@@ -1031,14 +1023,7 @@ export default function NewMatchPage() {
         {/* Score Input */}
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Resultado</CardTitle>
-              {sets.length > 2 && (
-                <Button variant="outline" size="sm" onClick={removeSet}>
-                  - Set
-                </Button>
-              )}
-            </div>
+            <CardTitle className="text-base">Resultado</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
