@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
+import { QUERY_STALE_TIME } from '@/lib/constants'
 import type { Profile } from '@/types/database'
 
 interface UserStats {
@@ -46,7 +47,7 @@ export function useUserStats() {
         ranking: rankingResult.data?.rank || null
       }
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes - same as useProfile
+    staleTime: QUERY_STALE_TIME,
   })
 }
 

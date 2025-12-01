@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
+import { QUERY_STALE_TIME } from '@/lib/constants'
 import type { Player, Profile } from '@/types/database'
 
 interface ProfileData {
@@ -63,7 +64,7 @@ export function useProfile() {
         ghostPlayers
       }
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: QUERY_STALE_TIME,
   })
 }
 

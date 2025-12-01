@@ -46,6 +46,7 @@ import {
 } from "@/lib/padel-rules";
 import { createClient } from "@/lib/supabase/client";
 import { fuzzySearch } from "@/lib/utils";
+import { MAX_BACKDATE_DAYS } from "@/lib/constants";
 import type {
   MatchConfig,
   MatchInvitation,
@@ -84,8 +85,28 @@ type SelectedPlayer = Pick<
   avatar_url?: string | null;
 };
 
-// Maximum days allowed for backdating matches
-const MAX_BACKDATE_DAYS = 30;
+// Type for player with joined profiles data from Supabase
+type PlayerWithProfiles = SelectedPlayer & {
+  profiles?: { avatar_url: string | null } | { avatar_url: string | null }[] | null;
+};
+
+// Helper to extract avatar_url from joined profiles data
+function extractAvatarUrl(player: PlayerWithProfiles): string | null {
+  if (!player.profiles) return null;
+  if (Array.isArray(player.profiles)) {
+    return player.profiles[0]?.avatar_url ?? null;
+  }
+  return player.profiles.avatar_url ?? null;
+}
+
+// Helper to convert player with profiles to SelectedPlayer
+function toSelectedPlayer(player: PlayerWithProfiles): SelectedPlayer {
+  const { profiles, ...rest } = player;
+  return {
+    ...rest,
+    avatar_url: player.is_ghost ? null : extractAvatarUrl(player),
+  };
+}
 
 export default function NewMatchPage() {
   const [loading, setLoading] = useState(false);
@@ -301,15 +322,7 @@ export default function NewMatchPage() {
       .maybeSingle();
 
     if (userPlayer) {
-      const playerWithAvatar = {
-        ...userPlayer,
-        avatar_url: Array.isArray(userPlayer.profiles)
-          ? (userPlayer.profiles[0] as any)?.avatar_url || null
-          : (userPlayer.profiles as any)?.avatar_url || null,
-      };
-      // Remove the profiles object
-      delete (playerWithAvatar as any).profiles;
-      setCurrentUser(playerWithAvatar as SelectedPlayer);
+      setCurrentUser(toSelectedPlayer(userPlayer as PlayerWithProfiles));
     } else {
       // If no player record exists, try to create it as fallback
       // This handles edge cases like old users created before the trigger existed
@@ -393,29 +406,13 @@ export default function NewMatchPage() {
       .eq("created_by_user_id", user.id)
       .order("display_name");
 
-    // Combine both results
-    const players = [...(registeredPlayers || []), ...(ghostPlayers || [])];
+    // Combine both results and convert to SelectedPlayer format
+    const allPlayers = [
+      ...(registeredPlayers || []).map((p) => toSelectedPlayer(p as PlayerWithProfiles)),
+      ...(ghostPlayers || []).map((p) => toSelectedPlayer(p as PlayerWithProfiles)),
+    ];
 
-    // Map players to include avatar_url
-    const playersWithAvatars = (players || []).map((player) => {
-      // For non-ghost players, extract avatar_url from profiles join
-      // For ghost players, avatar_url will be null (they don't have profiles)
-      const playerWithAvatar = {
-        ...player,
-        avatar_url: player.is_ghost
-          ? null
-          : Array.isArray((player as any).profiles)
-          ? ((player as any).profiles[0] as any)?.avatar_url || null
-          : ((player as any).profiles as any)?.avatar_url || null,
-      };
-      // Remove the profiles object if it exists
-      if ((playerWithAvatar as any).profiles) {
-        delete (playerWithAvatar as any).profiles;
-      }
-      return playerWithAvatar;
-    });
-
-    setAvailablePlayers(playersWithAvatars as SelectedPlayer[]);
+    setAvailablePlayers(allPlayers);
     setLoading(false);
   }
 

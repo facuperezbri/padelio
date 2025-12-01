@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
+import { QUERY_STALE_TIME } from '@/lib/constants'
 import type { Match, Player } from '@/types/database'
 
 export interface MatchWithPlayers extends Match {
@@ -83,7 +84,7 @@ export function usePlayerMatches(playerId: string | null, limit?: number) {
       })) as MatchWithPlayers[]
     },
     enabled: !!playerId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: QUERY_STALE_TIME,
   })
 }
 
