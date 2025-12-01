@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useNavigation } from "@/contexts/navigation-context";
-import { useQueryClient } from "@tanstack/react-query";
+import { MAX_BACKDATE_DAYS } from "@/lib/constants";
 import {
   canPlayThirdSet,
   getSetWinner,
@@ -48,7 +48,6 @@ import {
 } from "@/lib/padel-rules";
 import { createClient } from "@/lib/supabase/client";
 import { fuzzySearch } from "@/lib/utils";
-import { MAX_BACKDATE_DAYS } from "@/lib/constants";
 import type {
   MatchConfig,
   MatchInvitation,
@@ -62,6 +61,7 @@ import {
   CATEGORY_LABELS,
   DEFAULT_MATCH_CONFIG,
 } from "@/types/database";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Check,
   Loader2,
@@ -89,7 +89,10 @@ type SelectedPlayer = Pick<
 
 // Type for player with joined profiles data from Supabase
 type PlayerWithProfiles = SelectedPlayer & {
-  profiles?: { avatar_url: string | null } | { avatar_url: string | null }[] | null;
+  profiles?:
+    | { avatar_url: string | null }
+    | { avatar_url: string | null }[]
+    | null;
 };
 
 // Helper to extract avatar_url from joined profiles data
@@ -410,8 +413,12 @@ export default function NewMatchPage() {
 
     // Combine both results and convert to SelectedPlayer format
     const allPlayers = [
-      ...(registeredPlayers || []).map((p) => toSelectedPlayer(p as PlayerWithProfiles)),
-      ...(ghostPlayers || []).map((p) => toSelectedPlayer(p as PlayerWithProfiles)),
+      ...(registeredPlayers || []).map((p) =>
+        toSelectedPlayer(p as PlayerWithProfiles)
+      ),
+      ...(ghostPlayers || []).map((p) =>
+        toSelectedPlayer(p as PlayerWithProfiles)
+      ),
     ];
 
     setAvailablePlayers(allPlayers);
@@ -623,25 +630,39 @@ export default function NewMatchPage() {
 
     // Check if at least one score is entered (not both empty/zero)
     const hasAnyScore = team1Score > 0 || team2Score > 0;
-    
+
     if (hasAnyScore) {
       // First check if it's a valid score pattern
-      const isValidPattern = isValidSetScore(team1Score, team2Score, isSuperTiebreak);
-      
+      const isValidPattern = isValidSetScore(
+        team1Score,
+        team2Score,
+        isSuperTiebreak
+      );
+
       if (!isValidPattern) {
         // Invalid combination like 7-3 or 6-5
-        const setLabel = isSuperTiebreak ? "Super Tiebreak" : `Set ${setIndex + 1}`;
+        const setLabel = isSuperTiebreak
+          ? "Super Tiebreak"
+          : `Set ${setIndex + 1}`;
         const errorMessage = `Resultado inválido en ${setLabel}`;
         newSetErrors[setIndex][team] = errorMessage;
         newSetErrors[setIndex][otherTeam] = errorMessage;
       } else {
         // Valid pattern but check if set is complete (has a winner)
-        const validation = isValidCompletedSetScore(team1Score, team2Score, isSuperTiebreak);
+        const validation = isValidCompletedSetScore(
+          team1Score,
+          team2Score,
+          isSuperTiebreak
+        );
         if (!validation.valid) {
           // Set doesn't have a winner yet (e.g., 5-0, 4-3, etc.)
-          const setLabel = isSuperTiebreak ? "Super Tiebreak" : `Set ${setIndex + 1}`;
+          const setLabel = isSuperTiebreak
+            ? "Super Tiebreak"
+            : `Set ${setIndex + 1}`;
           newSetErrors[setIndex][team] = `${setLabel}: ${validation.error}`;
-          newSetErrors[setIndex][otherTeam] = `${setLabel}: ${validation.error}`;
+          newSetErrors[setIndex][
+            otherTeam
+          ] = `${setLabel}: ${validation.error}`;
         }
       }
     }
@@ -787,10 +808,10 @@ export default function NewMatchPage() {
 
     // Invalidate queries to refresh data immediately
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['profile'] }),
-      queryClient.invalidateQueries({ queryKey: ['user-stats'] }),
-      queryClient.invalidateQueries({ queryKey: ['player-matches'] }),
-      queryClient.invalidateQueries({ queryKey: ['ranking'] }),
+      queryClient.invalidateQueries({ queryKey: ["profile"] }),
+      queryClient.invalidateQueries({ queryKey: ["user-stats"] }),
+      queryClient.invalidateQueries({ queryKey: ["player-matches"] }),
+      queryClient.invalidateQueries({ queryKey: ["ranking"] }),
     ]);
 
     // Show share dialog if there are players to share with
@@ -1372,10 +1393,12 @@ export default function NewMatchPage() {
               setTimeout(async () => {
                 // If dialog is closed and match was successfully created, invalidate queries and reset form
                 await Promise.all([
-                  queryClient.invalidateQueries({ queryKey: ['profile'] }),
-                  queryClient.invalidateQueries({ queryKey: ['user-stats'] }),
-                  queryClient.invalidateQueries({ queryKey: ['player-matches'] }),
-                  queryClient.invalidateQueries({ queryKey: ['ranking'] }),
+                  queryClient.invalidateQueries({ queryKey: ["profile"] }),
+                  queryClient.invalidateQueries({ queryKey: ["user-stats"] }),
+                  queryClient.invalidateQueries({
+                    queryKey: ["player-matches"],
+                  }),
+                  queryClient.invalidateQueries({ queryKey: ["ranking"] }),
                 ]);
                 resetForm();
               }, 200); // Small delay to allow dialog close animation

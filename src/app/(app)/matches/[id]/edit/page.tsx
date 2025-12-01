@@ -298,22 +298,36 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
 
     if (hasAnyScore) {
       // First check if it's a valid score pattern
-      const isValidPattern = isValidSetScore(team1Score, team2Score, isSuperTiebreak);
+      const isValidPattern = isValidSetScore(
+        team1Score,
+        team2Score,
+        isSuperTiebreak
+      );
 
       if (!isValidPattern) {
         // Invalid combination like 7-3 or 6-5
-        const setLabel = isSuperTiebreak ? "Super Tiebreak" : `Set ${setIndex + 1}`;
+        const setLabel = isSuperTiebreak
+          ? "Super Tiebreak"
+          : `Set ${setIndex + 1}`;
         const errorMessage = `Resultado inválido en ${setLabel}`;
         newSetErrors[setIndex][team] = errorMessage;
         newSetErrors[setIndex][otherTeam] = errorMessage;
       } else {
         // Valid pattern but check if set is complete (has a winner)
-        const validation = isValidCompletedSetScore(team1Score, team2Score, isSuperTiebreak);
+        const validation = isValidCompletedSetScore(
+          team1Score,
+          team2Score,
+          isSuperTiebreak
+        );
         if (!validation.valid) {
           // Set doesn't have a winner yet (e.g., 5-0, 4-3, etc.)
-          const setLabel = isSuperTiebreak ? "Super Tiebreak" : `Set ${setIndex + 1}`;
+          const setLabel = isSuperTiebreak
+            ? "Super Tiebreak"
+            : `Set ${setIndex + 1}`;
           newSetErrors[setIndex][team] = `${setLabel}: ${validation.error}`;
-          newSetErrors[setIndex][otherTeam] = `${setLabel}: ${validation.error}`;
+          newSetErrors[setIndex][
+            otherTeam
+          ] = `${setLabel}: ${validation.error}`;
         }
       }
     }
