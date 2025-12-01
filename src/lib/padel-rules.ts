@@ -76,6 +76,53 @@ export function getSetWinner(
 }
 
 /**
+ * Verifica si un set está completo (tiene un ganador)
+ * Un set completo requiere que alguien haya ganado, no solo un resultado válido "en progreso"
+ */
+export function isCompletedSet(
+  team1: number,
+  team2: number,
+  isSuperTiebreak: boolean
+): boolean {
+  return getSetWinner(team1, team2, isSuperTiebreak) !== null;
+}
+
+/**
+ * Valida si un set tiene un resultado válido Y está completo para guardar un partido
+ * Esta es la validación que debe usarse al guardar un partido
+ */
+export function isValidCompletedSetScore(
+  team1: number,
+  team2: number,
+  isSuperTiebreak: boolean
+): { valid: boolean; error?: string } {
+  // Primero verificar si es un resultado válido
+  if (!isValidSetScore(team1, team2, isSuperTiebreak)) {
+    return {
+      valid: false,
+      error: "Resultado inválido según las reglas del pádel",
+    };
+  }
+
+  // Luego verificar si el set tiene ganador
+  const winner = getSetWinner(team1, team2, isSuperTiebreak);
+  if (winner === null) {
+    if (isSuperTiebreak) {
+      return {
+        valid: false,
+        error: "El Super Tiebreak debe tener un ganador (10 puntos con diferencia de 2)",
+      };
+    }
+    return {
+      valid: false,
+      error: "El set debe tener un ganador (6 games con diferencia de 2, o 7-5/7-6)",
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
  * Valida si se puede jugar un 3er set
  * Para jugar un 3er set, cada equipo debe haber ganado exactamente un set
  */

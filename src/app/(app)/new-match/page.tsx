@@ -41,6 +41,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   canPlayThirdSet,
   getSetWinner,
+  isCompletedSet,
+  isValidCompletedSetScore,
   isValidSetScore,
   validateMatch,
 } from "@/lib/padel-rules";
@@ -605,7 +607,6 @@ export default function NewMatchPage() {
     const set = updatedSet || sets[setIndex];
     const isSuperTiebreak = matchConfig.superTiebreak && setIndex === 2;
     const otherTeam = team === "team1" ? "team2" : "team1";
-    const otherValue = set[otherTeam];
 
     const newSetErrors = [...setErrors];
     if (!newSetErrors[setIndex]) {
@@ -615,20 +616,34 @@ export default function NewMatchPage() {
     // Validate the set score using the updated values
     const team1Score = team === "team1" ? value : set.team1;
     const team2Score = team === "team2" ? value : set.team2;
-    const isValid = isValidSetScore(team1Score, team2Score, isSuperTiebreak);
 
     // Clear errors for both teams first
     delete newSetErrors[setIndex][team];
     delete newSetErrors[setIndex][otherTeam];
 
-    // Only show error if both values are set (> 0) and the combination is invalid
-    if (!isValid && team1Score > 0 && team2Score > 0) {
-      const setLabel = isSuperTiebreak
-        ? "Super Tiebreak"
-        : `Set ${setIndex + 1}`;
-      const errorMessage = `Resultado inválido en ${setLabel}`;
-      newSetErrors[setIndex][team] = errorMessage;
-      newSetErrors[setIndex][otherTeam] = errorMessage;
+    // Check if at least one score is entered (not both empty/zero)
+    const hasAnyScore = team1Score > 0 || team2Score > 0;
+    
+    if (hasAnyScore) {
+      // First check if it's a valid score pattern
+      const isValidPattern = isValidSetScore(team1Score, team2Score, isSuperTiebreak);
+      
+      if (!isValidPattern) {
+        // Invalid combination like 7-3 or 6-5
+        const setLabel = isSuperTiebreak ? "Super Tiebreak" : `Set ${setIndex + 1}`;
+        const errorMessage = `Resultado inválido en ${setLabel}`;
+        newSetErrors[setIndex][team] = errorMessage;
+        newSetErrors[setIndex][otherTeam] = errorMessage;
+      } else {
+        // Valid pattern but check if set is complete (has a winner)
+        const validation = isValidCompletedSetScore(team1Score, team2Score, isSuperTiebreak);
+        if (!validation.valid) {
+          // Set doesn't have a winner yet (e.g., 5-0, 4-3, etc.)
+          const setLabel = isSuperTiebreak ? "Super Tiebreak" : `Set ${setIndex + 1}`;
+          newSetErrors[setIndex][team] = `${setLabel}: ${validation.error}`;
+          newSetErrors[setIndex][otherTeam] = `${setLabel}: ${validation.error}`;
+        }
+      }
     }
 
     setSetErrors(newSetErrors);
@@ -1381,6 +1396,7 @@ export default function NewMatchPage() {
         {/* Saving Match Loading Modal */}
         <Dialog open={savingMatch} onOpenChange={() => {}}>
           <DialogContent className="max-w-sm border-0 bg-transparent shadow-none [&>button]:hidden">
+            <DialogTitle className="sr-only">Guardando partido</DialogTitle>
             <div className="flex flex-col items-center gap-4 rounded-lg bg-background p-8 shadow-lg">
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
               <div className="text-center">

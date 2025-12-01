@@ -22,6 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   canPlayThirdSet,
   getSetWinner,
+  isValidCompletedSetScore,
   isValidSetScore,
   validateMatch,
 } from "@/lib/padel-rules";
@@ -278,27 +279,43 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
     const set = sets[setIndex];
     const isSuperTiebreak = matchConfig.superTiebreak && setIndex === 2;
     const otherTeam = team === "team1" ? "team2" : "team1";
-    const otherValue = set[otherTeam];
 
     const newSetErrors = [...setErrors];
     if (!newSetErrors[setIndex]) {
       newSetErrors[setIndex] = {};
     }
 
-    // Validate the set score
-    const isValid = isValidSetScore(
-      team === "team1" ? value : set.team1,
-      team === "team2" ? value : set.team2,
-      isSuperTiebreak
-    );
+    // Calculate scores for validation
+    const team1Score = team === "team1" ? value : set.team1;
+    const team2Score = team === "team2" ? value : set.team2;
 
-    if (!isValid && value > 0 && otherValue > 0) {
-      const setLabel = isSuperTiebreak
-        ? "Super Tiebreak"
-        : `Set ${setIndex + 1}`;
-      newSetErrors[setIndex][team] = `Resultado inválido en ${setLabel}`;
-    } else {
-      delete newSetErrors[setIndex][team];
+    // Clear errors for both teams first
+    delete newSetErrors[setIndex][team];
+    delete newSetErrors[setIndex][otherTeam];
+
+    // Check if at least one score is entered (not both empty/zero)
+    const hasAnyScore = team1Score > 0 || team2Score > 0;
+
+    if (hasAnyScore) {
+      // First check if it's a valid score pattern
+      const isValidPattern = isValidSetScore(team1Score, team2Score, isSuperTiebreak);
+
+      if (!isValidPattern) {
+        // Invalid combination like 7-3 or 6-5
+        const setLabel = isSuperTiebreak ? "Super Tiebreak" : `Set ${setIndex + 1}`;
+        const errorMessage = `Resultado inválido en ${setLabel}`;
+        newSetErrors[setIndex][team] = errorMessage;
+        newSetErrors[setIndex][otherTeam] = errorMessage;
+      } else {
+        // Valid pattern but check if set is complete (has a winner)
+        const validation = isValidCompletedSetScore(team1Score, team2Score, isSuperTiebreak);
+        if (!validation.valid) {
+          // Set doesn't have a winner yet (e.g., 5-0, 4-3, etc.)
+          const setLabel = isSuperTiebreak ? "Super Tiebreak" : `Set ${setIndex + 1}`;
+          newSetErrors[setIndex][team] = `${setLabel}: ${validation.error}`;
+          newSetErrors[setIndex][otherTeam] = `${setLabel}: ${validation.error}`;
+        }
+      }
     }
 
     setSetErrors(newSetErrors);
