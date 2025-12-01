@@ -1,33 +1,41 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { PlayerAvatar } from '@/components/ui/player-avatar'
-import { Check, Copy, MessageCircle, Share2, ExternalLink } from 'lucide-react'
-import type { Player, MatchInvitation } from '@/types/database'
+} from "@/components/ui/dialog";
+import { PlayerAvatar } from "@/components/ui/player-avatar";
+import type { MatchInvitation, Player } from "@/types/database";
+import { Check, Copy, ExternalLink, MessageCircle, Share2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-type SelectedPlayer = Pick<Player, 'id' | 'display_name' | 'is_ghost' | 'elo_score' | 'category_label' | 'profile_id'> & {
-  avatar_url?: string | null
-}
+type SelectedPlayer = Pick<
+  Player,
+  | "id"
+  | "display_name"
+  | "is_ghost"
+  | "elo_score"
+  | "category_label"
+  | "profile_id"
+> & {
+  avatar_url?: string | null;
+};
 
 interface WhatsAppShareDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  matchId: string | null
-  players: SelectedPlayer[]
-  invitations: MatchInvitation[]
-  matchDate: string
-  venue: string
-  onComplete: () => void
-  redirectOnClose?: boolean // Optional: whether to redirect on close (default: true for backward compatibility)
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  matchId: string | null;
+  players: SelectedPlayer[];
+  invitations: MatchInvitation[];
+  matchDate: string;
+  venue: string;
+  onComplete: () => void;
+  redirectOnClose?: boolean; // Optional: whether to redirect on close (default: true for backward compatibility)
 }
 
 export function WhatsAppShareDialog({
@@ -41,116 +49,114 @@ export function WhatsAppShareDialog({
   onComplete,
   redirectOnClose = true, // Default to true for backward compatibility
 }: WhatsAppShareDialogProps) {
-  const [copiedId, setCopiedId] = useState<string | null>(null)
-  const router = useRouter()
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const router = useRouter();
 
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
   function handleClose() {
-    onComplete()
+    onComplete();
     // Only navigate to home page if redirectOnClose is true
     if (redirectOnClose) {
       setTimeout(() => {
-        router.push('/')
-      }, 200)
+        router.push("/");
+      }, 200);
     }
   }
 
   function getInviteLink(player: SelectedPlayer): string {
     // Use public share link for all players - anyone can view and register
     if (matchId) {
-      // For ghost players, include ghostPlayerId in the link
-      if (player.is_ghost) {
-        return `${baseUrl}/share/${matchId}?ghostPlayerId=${player.id}`
-      }
-      return `${baseUrl}/share/${matchId}`
+      return `${baseUrl}/share/${matchId}`;
     }
-    
+
     // Fallback to match link if no matchId
-    return `${baseUrl}/matches/${matchId}`
+    return `${baseUrl}/matches/${matchId}`;
   }
 
   function generateWhatsAppMessage(player: SelectedPlayer): string {
-    const matchDateTime = new Date(matchDate)
-    const dateStr = matchDateTime.toLocaleDateString('es-AR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    })
-    const timeStr = matchDateTime.toLocaleTimeString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit',
+    const matchDateTime = new Date(matchDate);
+    const dateStr = matchDateTime.toLocaleDateString("es-AR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+    const timeStr = matchDateTime.toLocaleTimeString("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: false,
-    })
-    
-    const invitation = invitations.find(inv => inv.invited_player_id === player.id)
-    const link = getInviteLink(player)
-    
-    let message = `¡Hola ${player.display_name}! 🏓\n\n`
-    message += `Mirá el resultado del partido de padel del ${dateStr} a las ${timeStr}`
+    });
+
+    const invitation = invitations.find(
+      (inv) => inv.invited_player_id === player.id
+    );
+    const link = getInviteLink(player);
+
+    let message = `¡Hola ${player.display_name}! 🏓\n\n`;
+    message += `Mirá el resultado del partido de padel del ${dateStr} a las ${timeStr}`;
     if (venue) {
-      message += ` en ${venue}`
+      message += ` en ${venue}`;
     }
-    message += `.\n\n`
-    
+    message += `.\n\n`;
+    message += `Ver resultado y vincular tu cuenta:\n${link}`;
+
     if (player.is_ghost) {
-      message += `Si sos ${player.display_name}, creá tu cuenta en Vibo para vincular este partido y trackear tus estadísticas.\n\n`
-      message += `Link para registrarte:\n${link}`
-      message += `\n\nAl registrarte, este partido se vinculará automáticamente a tu cuenta.`
-    } else {
-      message += `Ver resultado y vincular tu cuenta:\n${link}`
+      message += `\n\nSi sos ${player.display_name}, podés registrarte y vincular este partido a tu cuenta para trackear tus partidos.`;
     }
-    
-    message += `\n\n¡Nos vemos en la cancha! 💪`
-    
-    return encodeURIComponent(message)
+
+    message += `\n\n¡Nos vemos en la cancha! 💪`;
+
+    return encodeURIComponent(message);
   }
 
   function handleWhatsAppShare(player: SelectedPlayer) {
-    const message = generateWhatsAppMessage(player)
-    window.open(`https://wa.me/?text=${message}`, '_blank')
+    const message = generateWhatsAppMessage(player);
+    window.open(`https://wa.me/?text=${message}`, "_blank");
   }
 
   function handleCopyLink(player: SelectedPlayer) {
-    const link = getInviteLink(player)
-    navigator.clipboard.writeText(link)
-    setCopiedId(player.id)
-    setTimeout(() => setCopiedId(null), 2000)
+    const link = getInviteLink(player);
+    navigator.clipboard.writeText(link);
+    setCopiedId(player.id);
+    setTimeout(() => setCopiedId(null), 2000);
   }
 
   function handleShareAll() {
     // Generate a single message for all players
-    const matchDateTime = new Date(matchDate)
-    const dateStr = matchDateTime.toLocaleDateString('es-AR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    })
-    const timeStr = matchDateTime.toLocaleTimeString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit',
+    const matchDateTime = new Date(matchDate);
+    const dateStr = matchDateTime.toLocaleDateString("es-AR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+    const timeStr = matchDateTime.toLocaleTimeString("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: false,
-    })
-    
-    let message = `¡Partido de padel registrado! 🏓\n\n`
-    message += `📅 ${dateStr} a las ${timeStr}`
+    });
+
+    let message = `¡Partido de padel registrado! 🏓\n\n`;
+    message += `📅 ${dateStr} a las ${timeStr}`;
     if (venue) {
-      message += `\n📍 ${venue}`
+      message += `\n📍 ${venue}`;
     }
-    message += `\n\n`
-    message += `Ver resultado: ${baseUrl}/share/${matchId}`
-    
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank')
+    message += `\n\n`;
+    message += `Ver resultado: ${baseUrl}/share/${matchId}`;
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
   }
 
   return (
-    <Dialog open={open} onOpenChange={(open) => {
-      if (!open) {
-        handleClose()
-      } else {
-        onOpenChange(open)
-      }
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleClose();
+        } else {
+          onOpenChange(open);
+        }
+      }}
+    >
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -166,8 +172,10 @@ export function WhatsAppShareDialog({
           {/* Individual player shares */}
           <div className="space-y-2">
             {players.map((player) => {
-              const invitation = invitations.find(inv => inv.invited_player_id === player.id)
-              const hasInvitation = !!invitation && !player.is_ghost
+              const invitation = invitations.find(
+                (inv) => inv.invited_player_id === player.id
+              );
+              const hasInvitation = !!invitation && !player.is_ghost;
 
               return (
                 <div
@@ -183,7 +191,11 @@ export function WhatsAppShareDialog({
                   <div className="flex-1">
                     <p className="font-medium">{player.display_name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {player.is_ghost ? 'Invitado (sin cuenta)' : hasInvitation ? 'Puede confirmar' : 'Ver resultado'}
+                      {player.is_ghost
+                        ? "Invitado (sin cuenta)"
+                        : hasInvitation
+                        ? "Puede confirmar"
+                        : "Ver resultado"}
                     </p>
                   </div>
                   <div className="flex gap-1">
@@ -210,7 +222,7 @@ export function WhatsAppShareDialog({
                     </Button>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
 
@@ -224,10 +236,7 @@ export function WhatsAppShareDialog({
               <ExternalLink className="h-4 w-4" />
               Compartir General
             </Button>
-            <Button
-              className="flex-1 gap-2"
-              onClick={handleClose}
-            >
+            <Button className="flex-1 gap-2" onClick={handleClose}>
               <Check className="h-4 w-4" />
               Listo
             </Button>
@@ -235,6 +244,5 @@ export function WhatsAppShareDialog({
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

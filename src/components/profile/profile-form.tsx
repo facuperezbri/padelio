@@ -43,6 +43,7 @@ import {
   Mail,
   MapPin,
   Phone,
+  Share2,
   Trash2,
   Users,
 } from "lucide-react";
@@ -199,6 +200,20 @@ export function ProfileForm({
     if (!error) {
       setGhostPlayers((prev) => prev.filter((g) => g.id !== ghostId));
     }
+  }
+
+  function handleInviteGhost(ghost: Player) {
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+    // Link to signup with ghostPlayerId
+    const link = `${baseUrl}/signup?ghostPlayerId=${ghost.id}`;
+
+    let message = `¡Hola ${ghost.display_name}! 🏓\n\n`;
+    message += `Te creé un jugador invitado en Vibo para anotar nuestros partidos de pádel.\n\n`;
+    message += `Si te creás una cuenta con este link, todos tus partidos y estadísticas se vincularán automáticamente a tu perfil:\n\n`;
+    message += `${link}\n\n`;
+    message += `¡Nos vemos en la cancha! 💪`;
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
   }
 
   async function handleLogout() {
@@ -493,34 +508,45 @@ export function ProfileForm({
                     category={ghost.category_label}
                     size="sm"
                   />
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>¿Eliminar jugador?</DialogTitle>
-                        <DialogDescription>
-                          Esta acción no se puede deshacer. El jugador será
-                          eliminado permanentemente.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-green-600 hover:text-green-700"
+                      onClick={() => handleInviteGhost(ghost)}
+                      title="Invitar a unirse"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
                         <Button
-                          variant="destructive"
-                          onClick={() => handleDeleteGhost(ghost.id)}
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive"
                         >
-                          Eliminar
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>¿Eliminar jugador?</DialogTitle>
+                          <DialogDescription>
+                            Esta acción no se puede deshacer. El jugador será
+                            eliminado permanentemente.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button
+                            variant="destructive"
+                            onClick={() => handleDeleteGhost(ghost.id)}
+                          >
+                            Eliminar
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
               ))}
             </CardContent>
