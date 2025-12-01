@@ -380,10 +380,8 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
     setValidationError(null);
 
     try {
-      // First, reverse the old ELO changes
-      await supabase.rpc("reverse_match_elos", { p_match_id: match.id });
-
-      // Then update the match (this will trigger the ELO recalculation)
+      // Update the match - the trigger will automatically recalculate ELOs
+      // for this match and all subsequent matches in chronological order
       const { error: updateError } = await supabase
         .from("matches")
         .update({
@@ -400,9 +398,6 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
         setSaving(false);
         return;
       }
-
-      // Manually recalculate ELOs
-      await supabase.rpc("update_match_elos", { match_id: match.id });
 
       setSuccess(true);
       // Redirect immediately to match detail page
@@ -422,10 +417,8 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
     setError(null);
 
     try {
-      // First, reverse the ELO changes
-      await supabase.rpc("reverse_match_elos", { p_match_id: match.id });
-
-      // Then delete the match
+      // Delete the match - the trigger will automatically recalculate ELOs
+      // for all subsequent matches in chronological order
       const { error: deleteError } = await supabase
         .from("matches")
         .delete()

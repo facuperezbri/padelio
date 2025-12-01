@@ -26,6 +26,7 @@ export interface Database {
           full_name: string | null;
           avatar_url: string | null;
           elo_score: number;
+          initial_elo: number | null;
           category_label: PlayerCategory;
           matches_played: number;
           matches_won: number;
@@ -44,6 +45,7 @@ export interface Database {
           full_name?: string | null;
           avatar_url?: string | null;
           elo_score?: number;
+          initial_elo?: number | null;
           category_label?: PlayerCategory;
           matches_played?: number;
           matches_won?: number;
@@ -62,6 +64,7 @@ export interface Database {
           full_name?: string | null;
           avatar_url?: string | null;
           elo_score?: number;
+          initial_elo?: number | null;
           category_label?: PlayerCategory;
           matches_played?: number;
           matches_won?: number;
@@ -84,6 +87,7 @@ export interface Database {
           display_name: string;
           is_ghost: boolean;
           elo_score: number;
+          initial_elo: number | null;
           category_label: PlayerCategory;
           matches_played: number;
           matches_won: number;
@@ -98,6 +102,7 @@ export interface Database {
           display_name: string;
           is_ghost?: boolean;
           elo_score?: number;
+          initial_elo?: number | null;
           category_label?: PlayerCategory;
           matches_played?: number;
           matches_won?: number;
@@ -112,6 +117,7 @@ export interface Database {
           display_name?: string;
           is_ghost?: boolean;
           elo_score?: number;
+          initial_elo?: number | null;
           category_label?: PlayerCategory;
           matches_played?: number;
           matches_won?: number;
@@ -346,6 +352,16 @@ export interface Database {
         Args: {
           p_ghost_player_id: string;
           p_user_id: string;
+        };
+        Returns: Json;
+      };
+      recalculate_all_elos: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
+      recalculate_elos_from_date: {
+        Args: {
+          p_from_date: string;
         };
         Returns: Json;
       };
