@@ -1,117 +1,49 @@
 "use client";
 
 import { Header } from "@/components/layout/header";
-import { WhatsAppShareDialog } from "@/components/match/whatsapp-share-dialog";
+import {
+  GhostPlayerDialog,
+  PlayerSlot,
+  toSelectedPlayer,
+  WhatsAppShareDialog,
+} from "@/components/match";
+import type {
+  PlayerPosition,
+  PlayerWithProfiles,
+  SelectedPlayer,
+} from "@/components/match";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { EloBadge } from "@/components/ui/elo-badge";
-import { GhostPlayerBadge } from "@/components/ui/ghost-player-badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NewPlayerBadge } from "@/components/ui/new-player-badge";
 import { PadelBallLoader } from "@/components/ui/padel-ball-loader";
 import { PlayerAvatar } from "@/components/ui/player-avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useNavigation } from "@/contexts/navigation-context";
 import { MAX_BACKDATE_DAYS } from "@/lib/constants";
 import {
   canPlayThirdSet,
   getSetWinner,
-  isCompletedSet,
   isValidCompletedSetScore,
   isValidSetScore,
   validateMatch,
 } from "@/lib/padel-rules";
 import { createClient } from "@/lib/supabase/client";
-import { fuzzySearch } from "@/lib/utils";
-import type {
-  MatchConfig,
-  MatchInvitation,
-  Player,
-  PlayerCategory,
-  SetScore,
-} from "@/types/database";
-import {
-  CATEGORIES,
-  CATEGORY_ELO_MAP,
-  CATEGORY_LABELS,
-  DEFAULT_MATCH_CONFIG,
-} from "@/types/database";
+import type { MatchConfig, MatchInvitation, SetScore } from "@/types/database";
+import { DEFAULT_MATCH_CONFIG } from "@/types/database";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  Check,
-  Loader2,
-  Plus,
-  Share2,
-  Trophy,
-  UserPlus,
-  X,
-} from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { Check, Loader2, Trophy } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-type SelectedPlayer = Pick<
-  Player,
-  | "id"
-  | "display_name"
-  | "is_ghost"
-  | "elo_score"
-  | "category_label"
-  | "profile_id"
-  | "matches_played"
-> & {
-  avatar_url?: string | null;
-};
-
-// Type for player with joined profiles data from Supabase
-type PlayerWithProfiles = SelectedPlayer & {
-  profiles?:
-    | { avatar_url: string | null }
-    | { avatar_url: string | null }[]
-    | null;
-};
-
-// Helper to extract avatar_url from joined profiles data
-function extractAvatarUrl(player: PlayerWithProfiles): string | null {
-  if (!player.profiles) return null;
-  if (Array.isArray(player.profiles)) {
-    return player.profiles[0]?.avatar_url ?? null;
-  }
-  return player.profiles.avatar_url ?? null;
-}
-
-// Helper to convert player with profiles to SelectedPlayer
-function toSelectedPlayer(player: PlayerWithProfiles): SelectedPlayer {
-  const { profiles, ...rest } = player;
-  return {
-    ...rest,
-    avatar_url: player.is_ghost ? null : extractAvatarUrl(player),
-  };
-}
 
 export default function NewMatchPage() {
   const [loading, setLoading] = useState(false);
@@ -186,17 +118,9 @@ export default function NewMatchPage() {
 
   // Ghost player creation
   const [showGhostDialog, setShowGhostDialog] = useState(false);
-  const [ghostPosition, setGhostPosition] = useState<
-    "team1-2" | "team2-1" | "team2-2" | null
-  >(null);
-  const [newGhostName, setNewGhostName] = useState("");
-  const [newGhostCategory, setNewGhostCategory] =
-    useState<PlayerCategory>("8va");
-  const [creatingGhost, setCreatingGhost] = useState(false);
-  const [ghostFormErrors, setGhostFormErrors] = useState<{
-    name?: string;
-    category?: string;
-  }>({});
+  const [ghostPosition, setGhostPosition] = useState<PlayerPosition | null>(
+    null
+  );
 
   // WhatsApp share
   const [showShareDialog, setShowShareDialog] = useState(false);
@@ -209,7 +133,6 @@ export default function NewMatchPage() {
     (() => void) | null
   >(null);
   const router = useRouter();
-  const pathname = usePathname();
   const supabase = createClient();
   const { registerConfirmHandler } = useNavigation();
   const queryClient = useQueryClient();
@@ -470,66 +393,14 @@ export default function NewMatchPage() {
     return availablePlayers.filter((p) => !selectedIds.includes(p.id));
   }
 
-  async function handleCreateGhost() {
-    // Validar todos los campos
-    const errors: { name?: string; category?: string } = {};
-
-    if (!newGhostName.trim()) {
-      errors.name = "El nombre es requerido";
-    }
-
-    if (!newGhostCategory) {
-      errors.category = "La categoría es requerida";
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setGhostFormErrors(errors);
-      return;
-    }
-
-    if (!ghostPosition) return;
-
-    setGhostFormErrors({});
-    setCreatingGhost(true);
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const initialElo = CATEGORY_ELO_MAP[newGhostCategory];
-
-    const { data: newPlayer, error } = await supabase
-      .from("players")
-      .insert({
-        display_name: newGhostName.trim(),
-        is_ghost: true,
-        created_by_user_id: user.id,
-        elo_score: initialElo,
-        category_label: newGhostCategory,
-      })
-      .select(
-        "id, display_name, is_ghost, elo_score, category_label, profile_id, matches_played"
-      )
-      .single();
-
-    if (error || !newPlayer) {
-      setError("Error al crear el jugador");
-      setCreatingGhost(false);
-      return;
-    }
-
+  function handleGhostPlayerCreated(
+    player: SelectedPlayer,
+    position: PlayerPosition
+  ) {
     // Add to available players and select
-    setAvailablePlayers((prev) => [...prev, newPlayer as SelectedPlayer]);
-    handlePlayerSelect(newPlayer as SelectedPlayer, ghostPosition);
-
-    // Reset dialog
-    setShowGhostDialog(false);
-    setNewGhostName("");
-    setNewGhostCategory("8va");
+    setAvailablePlayers((prev) => [...prev, player]);
+    handlePlayerSelect(player, position);
     setGhostPosition(null);
-    setCreatingGhost(false);
-    setGhostFormErrors({});
   }
 
   function handleSetScoreChange(
@@ -1283,102 +1154,13 @@ export default function NewMatchPage() {
         </Button>
 
         {/* Ghost Player Dialog */}
-        <Dialog
+        <GhostPlayerDialog
           open={showGhostDialog}
-          onOpenChange={(open) => {
-            setShowGhostDialog(open);
-            if (!open) {
-              // Limpiar errores y resetear formulario al cerrar
-              setGhostFormErrors({});
-              setNewGhostName("");
-              setNewGhostCategory("8va");
-            }
-          }}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Crear Jugador Invitado</DialogTitle>
-              <DialogDescription>
-                Creá un perfil para un amigo que no tiene cuenta
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="ghost-name">Nombre *</Label>
-                <Input
-                  id="ghost-name"
-                  placeholder="Nombre del jugador"
-                  value={newGhostName}
-                  onChange={(e) => {
-                    setNewGhostName(e.target.value);
-                    if (ghostFormErrors.name) {
-                      setGhostFormErrors((prev) => ({
-                        ...prev,
-                        name: undefined,
-                      }));
-                    }
-                  }}
-                  className={ghostFormErrors.name ? "border-destructive" : ""}
-                />
-                {ghostFormErrors.name && (
-                  <p className="text-sm text-destructive">
-                    {ghostFormErrors.name}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ghost-category">Categoría Estimada *</Label>
-                <Select
-                  value={newGhostCategory}
-                  onValueChange={(v) => {
-                    setNewGhostCategory(v as PlayerCategory);
-                    if (ghostFormErrors.category) {
-                      setGhostFormErrors((prev) => ({
-                        ...prev,
-                        category: undefined,
-                      }));
-                    }
-                  }}
-                >
-                  <SelectTrigger
-                    id="ghost-category"
-                    className={
-                      ghostFormErrors.category ? "border-destructive" : ""
-                    }
-                  >
-                    <SelectValue placeholder="Selecciona una categoría" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {CATEGORY_LABELS[cat]} ({CATEGORY_ELO_MAP[cat]} pts)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {ghostFormErrors.category && (
-                  <p className="text-sm text-destructive">
-                    {ghostFormErrors.category}
-                  </p>
-                )}
-              </div>
-              <Button
-                variant="outline"
-                className="w-full text-secondary hover:text-secondary hover:bg-muted"
-                onClick={handleCreateGhost}
-                disabled={
-                  !newGhostName.trim() || !newGhostCategory || creatingGhost
-                }
-              >
-                {creatingGhost && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                <UserPlus className="mr-2 h-4 w-4" />
-                Crear Jugador
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+          onOpenChange={setShowGhostDialog}
+          position={ghostPosition}
+          onPlayerCreated={handleGhostPlayerCreated}
+          onError={setError}
+        />
 
         {/* WhatsApp Share Dialog */}
         <WhatsAppShareDialog
@@ -1457,203 +1239,5 @@ export default function NewMatchPage() {
         </Dialog>
       </div>
     </>
-  );
-}
-
-// Player Slot Component
-interface PlayerSlotProps {
-  player: SelectedPlayer | null;
-  position: "team1-2" | "team2-1" | "team2-2";
-  availablePlayers: SelectedPlayer[];
-  onSelect: (
-    player: SelectedPlayer,
-    position: "team1-2" | "team2-1" | "team2-2"
-  ) => void;
-  onRemove: (position: "team1-2" | "team2-1" | "team2-2") => void;
-  onCreateGhost: (position: "team1-2" | "team2-1" | "team2-2") => void;
-  label?: string;
-}
-
-function PlayerSlot({
-  player,
-  position,
-  availablePlayers,
-  onSelect,
-  onRemove,
-  onCreateGhost,
-  label,
-}: PlayerSlotProps) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-
-  // Usar búsqueda difusa para encontrar jugadores similares
-  const searchResults = fuzzySearch(
-    availablePlayers,
-    search,
-    (p) => p.display_name,
-    30
-  );
-
-  const filteredPlayers = searchResults.map((result) => result.item);
-  const hasExactMatches = searchResults.some(
-    (r) => r.matchType === "exact" || r.matchType === "starts-with"
-  );
-  const hasFuzzyMatches = searchResults.some((r) => r.matchType === "fuzzy");
-
-  // Crear un mapa para acceso rápido al resultado de búsqueda por ID
-  const resultMap = new Map(searchResults.map((r) => [r.item.id, r]));
-
-  if (player) {
-    return (
-      <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-        <PlayerAvatar
-          name={player.display_name}
-          avatarUrl={player.avatar_url}
-          isGhost={player.is_ghost}
-          size="md"
-        />
-        <div className="flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-medium">{player.display_name}</p>
-            {player.is_ghost && <GhostPlayerBadge />}
-            <NewPlayerBadge matchesPlayed={player.matches_played || 0} />
-          </div>
-          {label && <p className="text-xs text-muted-foreground">{label}</p>}
-        </div>
-        <EloBadge
-          elo={player.elo_score}
-          category={player.category_label}
-          size="sm"
-        />
-        <Button variant="ghost" size="icon" onClick={() => onRemove(position)}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="h-auto w-full justify-start gap-3 border-dashed p-3"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-            <Plus className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div className="flex-1 text-left">
-            <span className="text-muted-foreground">
-              {label ? `${label} - ` : ""}Seleccionar jugador
-            </span>
-          </div>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-h-[80vh] p-0">
-        <DialogHeader className="p-4 pb-0">
-          <DialogTitle>Seleccionar Jugador</DialogTitle>
-        </DialogHeader>
-        <Command className="rounded-none border-0">
-          <CommandInput
-            placeholder="Buscar jugador..."
-            value={search}
-            onValueChange={setSearch}
-          />
-          <CommandList className="max-h-[50vh]">
-            {filteredPlayers.length === 0 ? (
-              <CommandEmpty>
-                <div className="py-6 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    No se encontraron jugadores
-                  </p>
-                  <Button
-                    variant="link"
-                    className="mt-2 text-secondary"
-                    onClick={() => {
-                      setOpen(false);
-                      onCreateGhost(position);
-                    }}
-                  >
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Crear jugador invitado
-                  </Button>
-                </div>
-              </CommandEmpty>
-            ) : (
-              <>
-                {hasFuzzyMatches && !hasExactMatches && search.trim() && (
-                  <div className="px-4 py-2 text-xs text-muted-foreground border-b">
-                    Mostrando sugerencias similares
-                  </div>
-                )}
-                <CommandGroup>
-                  {filteredPlayers.map((p) => {
-                    const result = resultMap.get(p.id);
-                    const isFuzzyMatch = result?.matchType === "fuzzy";
-
-                    return (
-                      <CommandItem
-                        key={p.id}
-                        value={p.display_name}
-                        onSelect={() => {
-                          onSelect(p, position);
-                          setOpen(false);
-                        }}
-                        className="flex items-center gap-3 p-3"
-                      >
-                        <PlayerAvatar
-                          name={p.display_name}
-                          avatarUrl={p.avatar_url}
-                          isGhost={p.is_ghost}
-                          size="sm"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p
-                              className={`font-medium ${
-                                isFuzzyMatch ? "opacity-90" : ""
-                              }`}
-                            >
-                              {p.display_name}
-                            </p>
-                            {isFuzzyMatch && (
-                              <span className="text-xs text-muted-foreground italic">
-                                (similar)
-                              </span>
-                            )}
-                            {p.is_ghost && <GhostPlayerBadge />}
-                            <NewPlayerBadge
-                              matchesPlayed={p.matches_played || 0}
-                            />
-                          </div>
-                        </div>
-                        <EloBadge
-                          elo={p.elo_score}
-                          category={p.category_label}
-                          size="sm"
-                        />
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              </>
-            )}
-            <div className="border-t p-2">
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-secondary"
-                onClick={() => {
-                  setOpen(false);
-                  onCreateGhost(position);
-                }}
-              >
-                <UserPlus className="mr-2 h-4 w-4" />
-                Crear jugador invitado
-              </Button>
-            </div>
-          </CommandList>
-        </Command>
-      </DialogContent>
-    </Dialog>
   );
 }
