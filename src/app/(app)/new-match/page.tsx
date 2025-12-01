@@ -1302,8 +1302,8 @@ export default function NewMatchPage() {
                 )}
               </div>
               <Button
-                variant="secondary"
-                className="w-full"
+                variant="outline"
+                className="w-full text-secondary hover:text-secondary hover:bg-muted"
                 onClick={handleCreateGhost}
                 disabled={
                   !newGhostName.trim() || !newGhostCategory || creatingGhost
@@ -1499,7 +1499,7 @@ function PlayerSlot({
                   </p>
                   <Button
                     variant="link"
-                    className="mt-2"
+                    className="mt-2 text-secondary"
                     onClick={() => {
                       setOpen(false);
                       onCreateGhost(position);
@@ -1572,7 +1572,7 @@ function PlayerSlot({
             <div className="border-t p-2">
               <Button
                 variant="ghost"
-                className="w-full justify-start"
+                className="w-full justify-start text-secondary"
                 onClick={() => {
                   setOpen(false);
                   onCreateGhost(position);
