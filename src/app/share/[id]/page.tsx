@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { PadelBallLoader } from "@/components/ui/padel-ball-loader";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import type { SetScore, Player, MatchConfig } from "@/types/database";
 
@@ -50,12 +50,16 @@ interface MatchData {
 
 export default function ShareMatchPage({ params }: ShareMatchPageProps) {
   const { id } = use(params);
+  const searchParams = useSearchParams();
+  const ghostPlayerIdFromUrl = searchParams.get("ghostPlayerId");
   const [loading, setLoading] = useState(true);
   const [match, setMatch] = useState<MatchData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(
+    ghostPlayerIdFromUrl || null
+  );
   const [linking, setLinking] = useState(false);
 
   const router = useRouter();
@@ -213,6 +217,16 @@ export default function ShareMatchPage({ params }: ShareMatchPageProps) {
       };
 
       setMatch(matchWithAvatars);
+
+      // If ghostPlayerId is in URL, verify it's valid and pre-select it
+      if (ghostPlayerIdFromUrl) {
+        const ghostPlayer = playersData.find(
+          (p) => p.id === ghostPlayerIdFromUrl && p.is_ghost && !p.profile_id
+        );
+        if (ghostPlayer) {
+          setSelectedPlayerId(ghostPlayerIdFromUrl);
+        }
+      }
     } catch (err) {
       setError("Error al cargar el partido");
     }
@@ -227,55 +241,25 @@ export default function ShareMatchPage({ params }: ShareMatchPageProps) {
     setError(null);
 
     try {
-      // Verify the player is a ghost player without profile_id
-      const { data: playerData, error: playerError } = await supabase
-        .from("players")
-        .select("id, is_ghost, profile_id")
-        .eq("id", selectedPlayerId)
-        .single();
+      // Use the RPC function to link ghost player
+      const { data: linkResult, error: linkError } = await supabase.rpc(
+        "link_ghost_player_to_user",
+        {
+          p_ghost_player_id: selectedPlayerId,
+          p_user_id: userId,
+        }
+      );
 
-      if (playerError || !playerData) {
-        setError("Jugador no encontrado");
+      if (linkError) {
+        setError("Error al vincular el jugador: " + linkError.message);
         setLinking(false);
         return;
       }
 
-      if (!playerData.is_ghost) {
-        setError("Este jugador ya tiene una cuenta vinculada");
-        setLinking(false);
-        return;
-      }
-
-      if (playerData.profile_id && playerData.profile_id !== userId) {
-        setError("Este jugador ya está vinculado a otra cuenta");
-        setLinking(false);
-        return;
-      }
-
-      // Get user profile info
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name, username, avatar_url")
-        .eq("id", userId)
-        .single();
-
-      if (!profile) {
-        setError("Error al obtener tu perfil");
-        setLinking(false);
-        return;
-      }
-
-      // Update the player record to link it to the user
-      const { error: updateError } = await supabase
-        .from("players")
-        .update({
-          profile_id: userId,
-          display_name: profile.full_name || profile.username,
-        })
-        .eq("id", selectedPlayerId);
-
-      if (updateError) {
-        setError("Error al vincular el jugador: " + updateError.message);
+      if (!linkResult || !linkResult.success) {
+        setError(
+          linkResult?.error || "Error al vincular el jugador invitado"
+        );
         setLinking(false);
         return;
       }
@@ -336,6 +320,11 @@ export default function ShareMatchPage({ params }: ShareMatchPageProps) {
   const players = [match.player_1, match.player_2, match.player_3, match.player_4];
   // Filter players that can be linked (ghost players without profile_id)
   const linkablePlayers = players.filter((p) => p.is_ghost && !p.profile_id);
+  
+  // Find the ghost player from URL if specified
+  const ghostPlayerFromUrl = ghostPlayerIdFromUrl
+    ? linkablePlayers.find((p) => p.id === ghostPlayerIdFromUrl)
+    : null;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-background via-background to-primary/5 p-4">
@@ -428,8 +417,9 @@ export default function ShareMatchPage({ params }: ShareMatchPageProps) {
               <Alert>
                 <UserPlus className="h-4 w-4" />
                 <AlertDescription>
-                  ¿Sos uno de estos jugadores invitados? Vinculá tu cuenta para
-                  trackear tus partidos.
+                  {ghostPlayerFromUrl
+                    ? `¿Sos ${ghostPlayerFromUrl.display_name}? Vinculá tu cuenta para trackear tus partidos.`
+                    : "¿Sos uno de estos jugadores invitados? Vinculá tu cuenta para trackear tus partidos."}
                 </AlertDescription>
               </Alert>
               <div className="space-y-3">
@@ -483,20 +473,42 @@ export default function ShareMatchPage({ params }: ShareMatchPageProps) {
             <Alert>
               <LogIn className="h-4 w-4" />
               <AlertDescription>
-                <Link
-                  href={`/signup?redirect=/share/${id}&matchId=${id}`}
-                  className="font-medium text-primary hover:underline"
-                >
-                  Creá una cuenta
-                </Link>{" "}
-                o{" "}
-                <Link
-                  href={`/login?redirect=/share/${id}&matchId=${id}`}
-                  className="font-medium text-primary hover:underline"
-                >
-                  iniciá sesión
-                </Link>{" "}
-                para vincular este partido a tu cuenta y trackear tu puntaje.
+                {ghostPlayerFromUrl ? (
+                  <>
+                    ¿Sos {ghostPlayerFromUrl.display_name}?{" "}
+                    <Link
+                      href={`/signup?redirect=/share/${id}&matchId=${id}&ghostPlayerId=${ghostPlayerIdFromUrl}`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      Creá una cuenta
+                    </Link>{" "}
+                    o{" "}
+                    <Link
+                      href={`/login?redirect=/share/${id}&matchId=${id}&ghostPlayerId=${ghostPlayerIdFromUrl}`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      iniciá sesión
+                    </Link>{" "}
+                    para vincular este partido a tu cuenta y trackear tus estadísticas.
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href={`/signup?redirect=/share/${id}&matchId=${id}`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      Creá una cuenta
+                    </Link>{" "}
+                    o{" "}
+                    <Link
+                      href={`/login?redirect=/share/${id}&matchId=${id}`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      iniciá sesión
+                    </Link>{" "}
+                    para vincular este partido a tu cuenta y trackear tu puntaje.
+                  </>
+                )}
               </AlertDescription>
             </Alert>
           )}

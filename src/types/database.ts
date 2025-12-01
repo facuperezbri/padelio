@@ -342,6 +342,13 @@ export interface Database {
         };
         Returns: HeadToHeadStats;
       };
+      link_ghost_player_to_user: {
+        Args: {
+          p_ghost_player_id: string;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       player_category: PlayerCategory;

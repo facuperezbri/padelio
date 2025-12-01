@@ -59,6 +59,10 @@ export function WhatsAppShareDialog({
   function getInviteLink(player: SelectedPlayer): string {
     // Use public share link for all players - anyone can view and register
     if (matchId) {
+      // For ghost players, include ghostPlayerId in the link
+      if (player.is_ghost) {
+        return `${baseUrl}/share/${matchId}?ghostPlayerId=${player.id}`
+      }
       return `${baseUrl}/share/${matchId}`
     }
     
@@ -88,10 +92,13 @@ export function WhatsAppShareDialog({
       message += ` en ${venue}`
     }
     message += `.\n\n`
-    message += `Ver resultado y vincular tu cuenta:\n${link}`
     
     if (player.is_ghost) {
-      message += `\n\nSi sos ${player.display_name}, podés registrarte y vincular este partido a tu cuenta para trackear tus partidos.`
+      message += `Si sos ${player.display_name}, creá tu cuenta en Vibo para vincular este partido y trackear tus estadísticas.\n\n`
+      message += `Link para registrarte:\n${link}`
+      message += `\n\nAl registrarte, este partido se vinculará automáticamente a tu cuenta.`
+    } else {
+      message += `Ver resultado y vincular tu cuenta:\n${link}`
     }
     
     message += `\n\n¡Nos vemos en la cancha! 💪`

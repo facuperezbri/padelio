@@ -174,6 +174,30 @@ export default function SignupPage() {
       setSuccess(true);
       setLoading(false);
 
+      // Link ghost player if ghostPlayerId is provided
+      const ghostPlayerId = searchParams.get("ghostPlayerId");
+      if (ghostPlayerId && user) {
+        try {
+          const { data: linkResult, error: linkError } = await supabase.rpc(
+            "link_ghost_player_to_user",
+            {
+              p_ghost_player_id: ghostPlayerId,
+              p_user_id: user.id,
+            }
+          );
+
+          if (linkError) {
+            console.error("Error linking ghost player:", linkError);
+            // Don't fail the signup if linking fails, just log it
+          } else if (linkResult && !linkResult.success) {
+            console.warn("Ghost player link warning:", linkResult.error);
+          }
+        } catch (err) {
+          console.error("Error linking ghost player:", err);
+          // Don't fail the signup if linking fails
+        }
+      }
+
       // Redirect after successful signup
       setTimeout(() => {
         const redirect = searchParams.get("redirect");

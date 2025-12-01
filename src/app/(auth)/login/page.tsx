@@ -48,7 +48,7 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -59,7 +59,41 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/");
+      // Link ghost player if ghostPlayerId is provided
+      const ghostPlayerId = searchParams.get("ghostPlayerId");
+      if (ghostPlayerId && authData.user) {
+        try {
+          const { data: linkResult, error: linkError } = await supabase.rpc(
+            "link_ghost_player_to_user",
+            {
+              p_ghost_player_id: ghostPlayerId,
+              p_user_id: authData.user.id,
+            }
+          );
+
+          if (linkError) {
+            console.error("Error linking ghost player:", linkError);
+            // Don't fail the login if linking fails, just log it
+          } else if (linkResult && !linkResult.success) {
+            console.warn("Ghost player link warning:", linkResult.error);
+          }
+        } catch (err) {
+          console.error("Error linking ghost player:", err);
+          // Don't fail the login if linking fails
+        }
+      }
+
+      // Redirect preserving parameters
+      const redirect = searchParams.get("redirect");
+      const matchId = searchParams.get("matchId");
+
+      if (redirect && matchId) {
+        router.push(redirect);
+      } else if (redirect) {
+        router.push(redirect);
+      } else {
+        router.push("/");
+      }
       router.refresh();
     } catch {
       setError("Error al iniciar sesión");
