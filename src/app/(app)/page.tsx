@@ -1,5 +1,4 @@
 import { HeadToHeadRivalry } from "@/components/home/head-to-head-rivalry";
-import { HomeRefresh } from "@/components/home/home-refresh";
 import { PartnerChemistry } from "@/components/home/partner-chemistry";
 import { ProfileSummary } from "@/components/home/profile-summary";
 import { RecentMatches } from "@/components/home/recent-matches";
@@ -23,7 +22,6 @@ export default async function HomePage() {
 
   return (
     <>
-      <HomeRefresh />
       <Header title="Vibo" showLogo />
 
       <div className="space-y-6 p-4">

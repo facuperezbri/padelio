@@ -2,15 +2,16 @@
 
 import { AnimatedNumberSimple } from "@/components/ui/animated-number";
 import { Card, CardContent } from "@/components/ui/card";
-import { useData } from "@/contexts/data-context";
+import { useUserStats } from "@/lib/react-query/hooks";
 import { Swords, Target, TrendingUp, Trophy } from "lucide-react";
 
 export function StatsGrid() {
-  const { stats } = useData();
+  const { data: userStats } = useUserStats();
 
-  const winRate = stats.profile?.matches_played
+  const profile = userStats?.profile;
+  const winRate = profile?.matches_played
     ? Math.round(
-        (stats.profile.matches_won / stats.profile.matches_played) * 100
+        ((profile.matches_won || 0) / profile.matches_played) * 100
       )
     : 0;
 
@@ -24,7 +25,7 @@ export function StatsGrid() {
           <div>
             <p className="text-2xl font-bold">
               <AnimatedNumberSimple
-                value={stats.profile?.matches_played || 0}
+                value={profile?.matches_played || 0}
                 duration={800}
               />
             </p>
@@ -41,7 +42,7 @@ export function StatsGrid() {
           <div>
             <p className="text-2xl font-bold">
               <AnimatedNumberSimple
-                value={stats.profile?.matches_won || 0}
+                value={profile?.matches_won || 0}
                 duration={800}
               />
             </p>
@@ -71,9 +72,9 @@ export function StatsGrid() {
           </div>
           <div>
             <p className="text-2xl font-bold">
-              {stats.ranking !== null ? (
+              {userStats?.ranking !== null && userStats?.ranking !== undefined ? (
                 <AnimatedNumberSimple
-                  value={stats.ranking}
+                  value={userStats.ranking}
                   duration={800}
                   prefix="#"
                 />

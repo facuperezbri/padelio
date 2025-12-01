@@ -3,12 +3,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { EloBadge } from "@/components/ui/elo-badge";
 import { PlayerAvatar } from "@/components/ui/player-avatar";
-import { useData } from "@/contexts/data-context";
+import { useProfile } from "@/lib/react-query/hooks";
 
 export function ProfileSummary() {
-  const { stats } = useData();
+  const { data: profileData, isLoading } = useProfile();
 
-  if (stats.loading) {
+  // Only show skeleton if we don't have data yet (first load)
+  if (isLoading && !profileData) {
     return (
       <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary/10 via-background to-background">
         <CardContent className="p-6">
@@ -25,28 +26,30 @@ export function ProfileSummary() {
     );
   }
 
+  const profile = profileData?.profile;
+
   return (
     <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary/10 via-background to-background">
       <CardContent className="p-6">
         <div className="flex items-center gap-4">
           <PlayerAvatar
             name={
-              stats.profile?.full_name || stats.profile?.username || "Usuario"
+              profile?.full_name || profile?.username || "Usuario"
             }
-            avatarUrl={stats.profile?.avatar_url}
+            avatarUrl={profile?.avatar_url}
             size="xl"
           />
           <div className="flex-1">
             <h2 className="text-xl font-bold">
-              {stats.profile?.full_name || stats.profile?.username || "Usuario"}
+              {profile?.full_name || profile?.username || "Usuario"}
             </h2>
             <p className="text-sm text-muted-foreground">
-              @{stats.profile?.username || "sin_username"}
+              @{profile?.username || "sin_username"}
             </p>
             <div className="mt-2">
               <EloBadge
-                elo={stats.profile?.elo_score || 1400}
-                category={stats.profile?.category_label}
+                elo={profile?.elo_score || 1400}
+                category={profile?.category_label}
                 size="lg"
               />
             </div>

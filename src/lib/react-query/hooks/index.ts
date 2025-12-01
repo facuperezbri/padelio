@@ -6,5 +6,6 @@ export { usePlayerStats } from './use-player-stats'
 export { usePlayerMatches, type MatchWithPlayers } from './use-player-matches'
 export { useRanking } from './use-ranking'
 export { useProfile } from './use-profile'
+export { useUserStats } from './use-user-stats'
 export { usePlayerIdByProfile } from './use-player-id-by-profile'
 

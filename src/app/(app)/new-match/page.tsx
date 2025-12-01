@@ -36,8 +36,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useData } from "@/contexts/data-context";
 import { useNavigation } from "@/contexts/navigation-context";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   canPlayThirdSet,
   getSetWinner,
@@ -183,7 +183,7 @@ export default function NewMatchPage() {
   const pathname = usePathname();
   const supabase = createClient();
   const { registerConfirmHandler } = useNavigation();
-  const { refreshStats } = useData();
+  const queryClient = useQueryClient();
   const errorRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -750,8 +750,13 @@ export default function NewMatchPage() {
     setSuccess(true);
     setSavingMatch(false);
 
-    // Refresh stats to show the new match immediately
-    await refreshStats();
+    // Invalidate queries to refresh data immediately
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['profile'] }),
+      queryClient.invalidateQueries({ queryKey: ['user-stats'] }),
+      queryClient.invalidateQueries({ queryKey: ['player-matches'] }),
+      queryClient.invalidateQueries({ queryKey: ['ranking'] }),
+    ]);
 
     // Show share dialog if there are players to share with
     const allPlayers = [team1Player2, team2Player1, team2Player2];
@@ -1330,8 +1335,13 @@ export default function NewMatchPage() {
             // Note: Navigation is handled by the WhatsAppShareDialog component itself
             if (!open && success) {
               setTimeout(async () => {
-                // If dialog is closed and match was successfully created, refresh stats and reset form
-                await refreshStats();
+                // If dialog is closed and match was successfully created, invalidate queries and reset form
+                await Promise.all([
+                  queryClient.invalidateQueries({ queryKey: ['profile'] }),
+                  queryClient.invalidateQueries({ queryKey: ['user-stats'] }),
+                  queryClient.invalidateQueries({ queryKey: ['player-matches'] }),
+                  queryClient.invalidateQueries({ queryKey: ['ranking'] }),
+                ]);
                 resetForm();
               }, 200); // Small delay to allow dialog close animation
             }

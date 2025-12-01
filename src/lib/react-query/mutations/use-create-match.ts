@@ -43,8 +43,9 @@ export function useCreateMatch() {
       queryClient.invalidateQueries({ queryKey: ['head-to-head-stats'] })
       queryClient.invalidateQueries({ queryKey: ['partner-stats'] })
       queryClient.invalidateQueries({ queryKey: ['player-stats'] })
-      // Also invalidate DataContext stats if still in use
       queryClient.invalidateQueries({ queryKey: ['user-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: ['ranking'] })
     },
   })
 }
