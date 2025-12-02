@@ -1,37 +1,34 @@
+"use client";
+
 import { HeadToHeadRivalry } from "@/components/home/head-to-head-rivalry";
 import { PartnerChemistry } from "@/components/home/partner-chemistry";
 import { ProfileSummary } from "@/components/home/profile-summary";
 import { RecentMatches } from "@/components/home/recent-matches";
 import { StatsGrid } from "@/components/home/stats-grid";
 import { Header } from "@/components/layout/header";
-import { createClient } from "@/lib/supabase/server";
+import { useProfile } from "@/lib/react-query/hooks";
 import { isPlayerProfileComplete } from "@/lib/profile-utils";
 import { Swords } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default async function HomePage() {
-  const supabase = await createClient();
+export default function HomePage() {
+  const { data: profileData, isLoading } = useProfile();
+  const router = useRouter();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  useEffect(() => {
+    if (!isLoading && profileData) {
+      const { profile, user } = profileData;
+      
+      // Verify profile is complete - additional check for safety
+      if (!profile || (profile.user_type === "player" && !isPlayerProfileComplete(profile, user))) {
+        router.push("/complete-profile");
+      }
+    }
+  }, [isLoading, profileData, router]);
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Verify profile is complete - additional check for safety
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("user_type, category_label, country, province, email, phone, gender")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (!profile || (profile.user_type === "player" && !isPlayerProfileComplete(profile, user))) {
-    redirect("/complete-profile");
-  }
-
+  // Render immediately - components will show their own skeletons while loading
   return (
     <>
       <Header title="Vibo" showLogo />
