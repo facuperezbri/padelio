@@ -507,8 +507,8 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
     setValidationError(null);
 
     try {
-      // Update the match - the trigger will automatically recalculate ELOs
-      // for this match and all subsequent matches in chronological order
+      // Update the match - ELO will NOT be automatically recalculated
+      // Admin can run recalculate_all_elos() from Supabase if needed
       const { error: updateError } = await supabase
         .from("matches")
         .update({
