@@ -107,6 +107,7 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
 
   async function loadMatch() {
     setLoading(true);
+    setError(null);
 
     const {
       data: { user },
@@ -117,21 +118,22 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
     }
     setCurrentUserId(user.id);
 
-    const { data: matchData } = await supabase
+    // Primero obtener el partido sin joins complejos de profiles
+    const { data: matchData, error: matchError } = await supabase
       .from("matches")
       .select(
         `
         *,
-        player_1:players!matches_player_1_id_fkey(*, profiles!left(avatar_url)),
-        player_2:players!matches_player_2_id_fkey(*, profiles!left(avatar_url)),
-        player_3:players!matches_player_3_id_fkey(*, profiles!left(avatar_url)),
-        player_4:players!matches_player_4_id_fkey(*, profiles!left(avatar_url))
+        player_1:players!matches_player_1_id_fkey(*),
+        player_2:players!matches_player_2_id_fkey(*),
+        player_3:players!matches_player_3_id_fkey(*),
+        player_4:players!matches_player_4_id_fkey(*)
       `
       )
       .eq("id", id)
       .single();
 
-    if (!matchData) {
+    if (matchError || !matchData) {
       setError("Partido no encontrado");
       setLoading(false);
       return;
@@ -144,13 +146,38 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
       return;
     }
 
-    // Helper function to extract avatar_url from profiles join
+    // Obtener avatares por separado
+    const profileIds = new Set<string>();
+    const players = [
+      matchData.player_1,
+      matchData.player_2,
+      matchData.player_3,
+      matchData.player_4,
+    ] as any[];
+    players.forEach((player) => {
+      if (player?.profile_id && !player.is_ghost) {
+        profileIds.add(player.profile_id);
+      }
+    });
+
+    let avatarsMap: Record<string, string | null> = {};
+    if (profileIds.size > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, avatar_url")
+        .in("id", Array.from(profileIds));
+
+      if (profiles) {
+        profiles.forEach((profile) => {
+          avatarsMap[profile.id] = profile.avatar_url;
+        });
+      }
+    }
+
+    // Helper function to get avatar_url
     const getAvatarUrl = (player: any): string | null => {
       if (player.is_ghost || !player.profile_id) return null;
-      if (Array.isArray(player.profiles)) {
-        return player.profiles[0]?.avatar_url || null;
-      }
-      return player.profiles?.avatar_url || null;
+      return avatarsMap[player.profile_id] || null;
     };
 
     const fullMatch: MatchWithPlayers = {
