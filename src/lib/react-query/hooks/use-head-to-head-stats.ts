@@ -17,14 +17,6 @@ export function useHeadToHeadStats(playerAId: string | null, playerBId: string |
         player_b_id: playerBId,
       })
 
-      // Debug logging - TODO: Remove after fixing the issue
-      console.log('[useHeadToHeadStats] Debug:', {
-        playerAId,
-        playerBId,
-        data: data || null,
-        error: error?.message || null
-      });
-
       if (error) {
         throw error
       }
