@@ -29,7 +29,7 @@ export function useProfile() {
       const [profileResult, playerResult, ghostPlayersResult] = await Promise.all([
         supabase
           .from('profiles')
-          .select('id, full_name, username, avatar_url, elo_score, category_label, country, province, phone, email, gender')
+          .select('id, full_name, username, avatar_url, elo_score, category_label, country, province, phone, email, gender, user_type')
           .eq('id', user.id)
           .maybeSingle(),
         supabase

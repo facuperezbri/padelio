@@ -5,6 +5,7 @@ import { RecentMatches } from "@/components/home/recent-matches";
 import { StatsGrid } from "@/components/home/stats-grid";
 import { Header } from "@/components/layout/header";
 import { createClient } from "@/lib/supabase/server";
+import { isPlayerProfileComplete } from "@/lib/profile-utils";
 import { Swords } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -18,6 +19,17 @@ export default async function HomePage() {
 
   if (!user) {
     redirect("/login");
+  }
+
+  // Verify profile is complete - additional check for safety
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("user_type, category_label, country, province, email, phone, gender")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!profile || (profile.user_type === "player" && !isPlayerProfileComplete(profile, user))) {
+    redirect("/complete-profile");
   }
 
   return (

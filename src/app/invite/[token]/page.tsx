@@ -111,6 +111,36 @@ export default function InvitePage({ params }: InvitePageProps) {
 
       setResponse(responseType);
 
+      // Send push notification to match creator about the response
+      if (invitation?.match_id) {
+        try {
+          // Get match creator ID
+          const { data: matchData } = await supabase
+            .from("matches")
+            .select("created_by")
+            .eq("id", invitation.match_id)
+            .single();
+
+          if (matchData?.created_by) {
+            const responseText = responseType === "accepted" ? "aceptó" : "rechazó";
+            await fetch("/api/send-push-notification", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId: matchData.created_by,
+                title: "Respuesta a invitación",
+                body: `${invitation.player_names?.[0] || "Un jugador"} ${responseText} tu invitación al partido`,
+                url: `/matches/${invitation.match_id}`,
+                data: { matchId: invitation.match_id, response: responseType },
+              }),
+            });
+          }
+        } catch (error) {
+          // Don't fail if notification fails
+          console.error("Error sending push notification:", error);
+        }
+      }
+
       // Redirect to match details after a delay
       setTimeout(() => {
         if (isLoggedIn && invitation?.match_id) {

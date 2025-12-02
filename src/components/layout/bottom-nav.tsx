@@ -2,9 +2,13 @@
 
 import { useNavigation } from "@/contexts/navigation-context";
 import { cn } from "@/lib/utils";
-import { History, Home, Plus, Trophy, User } from "lucide-react";
+import { useProfile } from "@/lib/react-query/hooks";
+import { isPlayerProfileComplete } from "@/lib/profile-utils";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
+import { History, Home, Plus, Trophy, User as UserIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const navItems = [
   {
@@ -31,7 +35,7 @@ const navItems = [
   {
     href: "/profile",
     label: "Perfil",
-    icon: User,
+    icon: UserIcon,
   },
 ];
 
@@ -39,6 +43,32 @@ export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { handleNavigation: handleNavigationWithConfirm } = useNavigation();
+  const { data: profileData } = useProfile();
+  const [isProfileIncomplete, setIsProfileIncomplete] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  // Get current user
+  useEffect(() => {
+    async function getUser() {
+      const supabase = createClient();
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      setUser(currentUser);
+    }
+    getUser();
+  }, []);
+
+  // Check if profile is incomplete
+  useEffect(() => {
+    if (!profileData?.profile || !user) {
+      setIsProfileIncomplete(false);
+      return;
+    }
+
+    const incomplete = !isPlayerProfileComplete(profileData.profile, user);
+    setIsProfileIncomplete(incomplete);
+  }, [profileData, user]);
 
   // Prefetch all routes immediately on mount (like React Router)
   useEffect(() => {
@@ -80,16 +110,23 @@ export function BottomNav() {
             );
           }
 
+          const showBadge = item.href === "/profile" && isProfileIncomplete;
+
           return (
             <button
               key={item.href}
               onClick={() => handleNavigation(item.href)}
               className={cn(
-                "touch-target flex flex-col items-center justify-center gap-1 px-3 py-2 transition-colors",
+                "touch-target relative flex flex-col items-center justify-center gap-1 px-3 py-2 transition-colors",
                 isActive ? "text-secondary" : "text-muted-foreground"
               )}
             >
-              <Icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
+              <div className="relative">
+                <Icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
+                {showBadge && (
+                  <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-destructive border-2 border-background" />
+                )}
+              </div>
               <span className="text-[10px] font-medium">{item.label}</span>
             </button>
           );

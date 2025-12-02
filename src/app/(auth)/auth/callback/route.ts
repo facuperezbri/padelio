@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { isPlayerProfileComplete, isClubProfileComplete } from "@/lib/profile-utils";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -85,15 +86,15 @@ export async function GET(request: Request) {
           category_label: "8va",
           email: user.email || null,
           phone: metadata.phone || metadata.phone_number || null,
-          // user_type will be NULL by default, which triggers role selection
+          user_type: "player", // Automatically set to player
         });
 
         if (createError) {
           console.error("Error creating profile:", createError);
-          // Still redirect to select-role to let user choose
+          // Still redirect to select-role (which will auto-set to player)
         }
 
-        // New user - redirect to role selection
+        // New user - redirect to role selection (which will auto-set to player)
         return NextResponse.redirect(`${origin}/select-role`);
       }
 
@@ -104,33 +105,25 @@ export async function GET(request: Request) {
       }
 
       // Handle based on user type
+      // Note: Clubs are disabled for now, all users should be players
       if (profile.user_type === "club") {
-        // Check if club exists
-        const { data: club } = await supabase
-          .from("clubs")
-          .select("id")
-          .eq("created_by", user.id)
-          .single();
-
-        if (!club) {
-          // Club type but no club created yet
-          return NextResponse.redirect(`${origin}/create-club`);
-        }
-
-        // Club exists, proceed normally
+        // If somehow a user has club type, redirect them to home
+        // They can't access club features until it's enabled
         return NextResponse.redirect(`${origin}${next}`);
       }
 
-      // Player type - check if profile is complete
-      const hasRequiredFields =
-        profile.category_label &&
-        profile.country &&
-        profile.province &&
-        (profile.email || user.email) &&
-        profile.phone &&
-        profile.gender;
-
-      if (!hasRequiredFields) {
+      // Player type - check if profile is complete using helper function
+      if (profile.user_type === "player") {
+        if (!isPlayerProfileComplete(profile, user)) {
+          return NextResponse.redirect(`${origin}/complete-profile`);
+        }
+      } else if (profile.user_type === "club") {
+        // Club type - check if profile is complete
+        if (!isClubProfileComplete(profile, user)) {
+          return NextResponse.redirect(`${origin}/complete-profile`);
+        }
+      } else {
+        // user_type not set or invalid, redirect to complete-profile
         return NextResponse.redirect(`${origin}/complete-profile`);
       }
     }

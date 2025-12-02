@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isPlayerProfileComplete, isClubProfileComplete } from '@/lib/profile-utils'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -56,15 +57,62 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
-    // User is logged in but trying to access auth pages, redirect to home
-    const url = request.nextUrl.clone()
-    url.pathname = '/'
-    const redirectResponse = NextResponse.redirect(url)
-    // Copy cookies from supabaseResponse
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-      redirectResponse.cookies.set(cookie.name, cookie.value)
-    })
-    return redirectResponse
+    // User is logged in but trying to access auth pages
+    // First check if profile is complete before redirecting
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_type, category_label, country, province, email, phone, gender')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      // If profile doesn't exist or has error, redirect to complete-profile
+      if (!profile || profileError) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/complete-profile'
+        const redirectResponse = NextResponse.redirect(url)
+        supabaseResponse.cookies.getAll().forEach((cookie) => {
+          redirectResponse.cookies.set(cookie.name, cookie.value)
+        })
+        return redirectResponse
+      }
+
+      // Check if profile is complete
+      const isProfileComplete = 
+        (profile.user_type === 'player' && isPlayerProfileComplete(profile, user)) ||
+        (profile.user_type === 'club' && isClubProfileComplete(profile, user))
+
+      if (!isProfileComplete) {
+        // Profile is incomplete, redirect to complete-profile
+        const url = request.nextUrl.clone()
+        url.pathname = '/complete-profile'
+        const redirectResponse = NextResponse.redirect(url)
+        supabaseResponse.cookies.getAll().forEach((cookie) => {
+          redirectResponse.cookies.set(cookie.name, cookie.value)
+        })
+        return redirectResponse
+      }
+
+      // Profile is complete, redirect to home
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      const redirectResponse = NextResponse.redirect(url)
+      // Copy cookies from supabaseResponse
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value)
+      })
+      return redirectResponse
+    } catch (error) {
+      // If there's an error checking profile, redirect to complete-profile to be safe
+      console.error('Error checking profile completeness:', error)
+      const url = request.nextUrl.clone()
+      url.pathname = '/complete-profile'
+      const redirectResponse = NextResponse.redirect(url)
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value)
+      })
+      return redirectResponse
+    }
   }
 
   // Check if profile is complete for authenticated users accessing protected routes
@@ -87,22 +135,10 @@ export async function updateSession(request: NextRequest) {
         return redirectResponse
       }
 
-      // Check profile completeness based on user type
-      const isPlayerProfileComplete = profile.user_type === 'player' &&
-        profile.category_label &&
-        profile.country &&
-        profile.province &&
-        (profile.email || user.email) &&
-        profile.phone &&
-        profile.gender
-
-      const isClubProfileComplete = profile.user_type === 'club' &&
-        profile.country &&
-        profile.province &&
-        (profile.email || user.email) &&
-        profile.phone
-
-      const isProfileComplete = isPlayerProfileComplete || isClubProfileComplete
+      // Check profile completeness based on user type using helper function
+      const isProfileComplete = 
+        (profile.user_type === 'player' && isPlayerProfileComplete(profile, user)) ||
+        (profile.user_type === 'club' && isClubProfileComplete(profile, user))
 
       if (!isProfileComplete) {
         // Profile is incomplete, redirect to complete-profile

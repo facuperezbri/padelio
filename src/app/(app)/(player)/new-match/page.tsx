@@ -738,6 +738,45 @@ export default function NewMatchPage() {
 
       if (newInvitations) {
         setInvitations(newInvitations);
+        
+        // Send push notifications to invited players
+        for (const invitation of newInvitations) {
+          if (invitation.invited_profile_id) {
+            try {
+              const matchDateTime = new Date(`${matchDate}T${matchTime}:00`);
+              const dateStr = matchDateTime.toLocaleDateString("es-AR", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              });
+              const timeStr = matchDateTime.toLocaleTimeString("es-AR", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+              });
+
+              const inviteLink = invitation.invite_token
+                ? `${window.location.origin}/invite/${invitation.invite_token}`
+                : `${window.location.origin}/share/${match.id}`;
+
+              // Send push notification
+              await fetch("/api/send-push-notification", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  userId: invitation.invited_profile_id,
+                  title: "Nueva invitación a partido",
+                  body: `Te invitaron a confirmar un partido del ${dateStr} a las ${timeStr}`,
+                  url: inviteLink,
+                  data: { matchId: match.id, invitationId: invitation.id },
+                }),
+              });
+            } catch (error) {
+              // Don't fail the match creation if notification fails
+              console.error("Error sending push notification:", error);
+            }
+          }
+        }
       }
     }
 

@@ -105,15 +105,19 @@ export default function CompleteProfilePage() {
 
     // Check if user_type is set
     if (!profile || !profile.user_type) {
-      // User hasn't selected a role yet
-      router.push("/select-role");
-      return;
+      // User hasn't selected a role yet - auto-set to player
+      await supabase
+        .from("profiles")
+        .update({ user_type: "player" })
+        .eq("id", user.id);
+      // Continue with player flow
     }
 
     // Handle based on user type
-    if (profile.user_type === "club") {
-      // Club users should use create-club page
-      router.push("/create-club");
+    // Note: Clubs are disabled for now
+    if (profile?.user_type === "club") {
+      // If somehow a user has club type, redirect them to home
+      router.push("/");
       return;
     }
 
@@ -198,10 +202,31 @@ export default function CompleteProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.country]);
 
+  // Validate that all required fields are filled
+  const isFormValid = () => {
+    const hasRequiredFields =
+      formData.username &&
+      formData.category &&
+      formData.country &&
+      formData.province &&
+      (hasOAuthEmail || formData.email) &&
+      (hasOAuthPhone || formData.phone) &&
+      formData.gender;
+
+    return !!hasRequiredFields;
+  };
+
   async function handleComplete(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setError(null);
+
+    // Validate form before proceeding
+    if (!isFormValid()) {
+      setError("Por favor completá todos los campos requeridos");
+      setSaving(false);
+      return;
+    }
 
     const {
       data: { user },
@@ -473,6 +498,7 @@ export default function CompleteProfilePage() {
                     category: value as PlayerCategory,
                   })
                 }
+                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona tu categoría" />
@@ -525,6 +551,7 @@ export default function CompleteProfilePage() {
                   onValueChange={(value) =>
                     setFormData({ ...formData, country: value })
                   }
+                  required
                 >
                   <SelectTrigger className="pl-10">
                     <SelectValue placeholder="Selecciona tu país" />
@@ -550,6 +577,7 @@ export default function CompleteProfilePage() {
                     onValueChange={(value) =>
                       setFormData({ ...formData, province: value })
                     }
+                    required
                   >
                     <SelectTrigger className="pl-10">
                       <SelectValue placeholder="Selecciona tu provincia" />
@@ -590,6 +618,7 @@ export default function CompleteProfilePage() {
                   onValueChange={(value) =>
                     setFormData({ ...formData, gender: value })
                   }
+                  required
                 >
                   <SelectTrigger className="pl-10">
                     <SelectValue placeholder="Selecciona tu género" />
@@ -643,7 +672,7 @@ export default function CompleteProfilePage() {
               type="submit"
               variant="secondary"
               className="w-full"
-              disabled={saving}
+              disabled={saving || !isFormValid()}
             >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Continuar
