@@ -422,7 +422,7 @@ export default function NewMatchPage() {
       };
       newSets[setIndex] = updatedSet;
       setSets(newSets);
-      
+
       // Clear errors when clearing the field
       const newSetErrors = [...setErrors];
       if (newSetErrors[setIndex]) {
@@ -481,7 +481,7 @@ export default function NewMatchPage() {
     // When input loses focus, ensure we have a number (not empty string)
     const currentValue = setInputValues[setIndex]?.[team];
     let numValue = 0;
-    
+
     if (currentValue === "" || currentValue === undefined) {
       const newInputValues = [...setInputValues];
       newInputValues[setIndex] = { ...newInputValues[setIndex], [team]: "0" };

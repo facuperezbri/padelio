@@ -55,12 +55,12 @@ export function WhatsAppShareDialog({
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
   function handleClose() {
+    // Call onComplete callback
     onComplete();
     // Only navigate to home page if redirectOnClose is true
     if (redirectOnClose) {
-      setTimeout(() => {
-        router.push("/");
-      }, 200);
+      // Navigate immediately without delay
+      router.push("/");
     }
   }
 
@@ -236,7 +236,7 @@ export function WhatsAppShareDialog({
               <ExternalLink className="h-4 w-4" />
               Compartir General
             </Button>
-            <Button className="flex-1 gap-2" onClick={handleClose}>
+            <Button className="flex-1 gap-2" onClick={() => onOpenChange(false)}>
               <Check className="h-4 w-4" />
               Listo
             </Button>
