@@ -246,19 +246,19 @@ export function PartnerStatsComponent({ playerId, filterPartnerId, limit, showVi
                       <span className="text-red-600">{stat.lost_matches}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground flex-nowrap">
+                    <div className="flex items-center gap-1 flex-shrink-0">
                       <Calendar className="h-3 w-3" />
                       <span>Último: {formatDate(stat.last_match_date)}</span>
                     </div>
                     {stat.current_streak !== 0 && (
-                      <div className={`flex items-center gap-1 ${streakInfo.color}`}>
+                      <div className={`flex items-center gap-1 flex-shrink-0 ${streakInfo.color}`}>
                         {streakInfo.icon === 'flame' ? (
                           <Flame className="h-3 w-3 fill-current" />
                         ) : (
                           <TrendingDown className="h-3 w-3" />
                         )}
-                        <span className="font-medium">{streakInfo.text}</span>
+                        <span className="font-medium whitespace-nowrap">{streakInfo.text}</span>
                       </div>
                     )}
                   </div>
