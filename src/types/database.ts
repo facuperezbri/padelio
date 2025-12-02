@@ -8,6 +8,8 @@ export type PlayerCategory =
   | "2da"
   | "1ra";
 
+export type UserType = "player" | "club";
+
 export type ClubRole = "owner" | "admin" | "member";
 
 export type TournamentStatus =
@@ -57,6 +59,7 @@ export interface Database {
           email: string | null;
           gender: string | null;
           playing_side: string | null;
+          user_type: UserType;
           created_at: string;
           updated_at: string;
         };
@@ -76,6 +79,7 @@ export interface Database {
           email?: string | null;
           gender?: string | null;
           playing_side?: string | null;
+          user_type?: UserType;
           created_at?: string;
           updated_at?: string;
         };
@@ -95,6 +99,7 @@ export interface Database {
           email?: string | null;
           gender?: string | null;
           playing_side?: string | null;
+          user_type?: UserType;
           created_at?: string;
           updated_at?: string;
         };
@@ -645,6 +650,7 @@ export interface Database {
     };
     Enums: {
       player_category: PlayerCategory;
+      user_type: UserType;
       club_role: ClubRole;
       tournament_status: TournamentStatus;
       tournament_format: TournamentFormat;
