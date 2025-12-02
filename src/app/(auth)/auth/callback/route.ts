@@ -55,7 +55,7 @@ export async function GET(request: Request) {
       // Try to get profile, create if it doesn't exist
       let { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("category_label, country, province, email, phone, gender")
+        .select("user_type, category_label, country, province, email, phone, gender")
         .eq("id", user.id)
         .single();
 
@@ -85,18 +85,43 @@ export async function GET(request: Request) {
           category_label: "8va",
           email: user.email || null,
           phone: metadata.phone || metadata.phone_number || null,
+          // user_type will be NULL by default, which triggers role selection
         });
 
         if (createError) {
           console.error("Error creating profile:", createError);
-          // Still redirect to complete-profile to let user fix it
+          // Still redirect to select-role to let user choose
         }
 
-        // Redirect to complete profile since category is default
-        return NextResponse.redirect(`${origin}/complete-profile`);
+        // New user - redirect to role selection
+        return NextResponse.redirect(`${origin}/select-role`);
       }
 
-      // If profile doesn't have required fields, redirect to complete profile
+      // Check if user_type is set
+      if (!profile.user_type) {
+        // User hasn't selected a role yet
+        return NextResponse.redirect(`${origin}/select-role`);
+      }
+
+      // Handle based on user type
+      if (profile.user_type === "club") {
+        // Check if club exists
+        const { data: club } = await supabase
+          .from("clubs")
+          .select("id")
+          .eq("created_by", user.id)
+          .single();
+
+        if (!club) {
+          // Club type but no club created yet
+          return NextResponse.redirect(`${origin}/create-club`);
+        }
+
+        // Club exists, proceed normally
+        return NextResponse.redirect(`${origin}${next}`);
+      }
+
+      // Player type - check if profile is complete
       const hasRequiredFields =
         profile.category_label &&
         profile.country &&

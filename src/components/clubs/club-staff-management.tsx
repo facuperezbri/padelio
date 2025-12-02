@@ -25,6 +25,9 @@ import { createClient } from "@/lib/supabase/client";
 import { Trash2, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PlayerAvatar } from "@/components/ui/player-avatar";
+import { InviteStaffDialog } from "./invite-staff-dialog";
+import { InvitationsHistory } from "./invitations-history";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ROLE_COLORS: Record<ClubRole, string> = {
   owner: "bg-purple-500",
@@ -34,6 +37,7 @@ const ROLE_COLORS: Record<ClubRole, string> = {
 
 export function ClubStaffManagement() {
   const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const { data: club, isLoading: clubLoading } = useMyClubAsOwner(userId);
   const { data: staff, isLoading: staffLoading } = useClubStaff(club?.id);
 
@@ -104,11 +108,28 @@ export function ClubStaffManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Miembros del Club</h2>
-        <Button size="sm" variant="outline">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setInviteDialogOpen(true)}
+        >
           <UserPlus className="mr-2 h-4 w-4" />
           Invitar Staff
         </Button>
       </div>
+
+      <InviteStaffDialog
+        open={inviteDialogOpen}
+        onOpenChange={setInviteDialogOpen}
+        clubId={club?.id || ""}
+      />
+
+      <Tabs defaultValue="members" className="w-full">
+        <TabsList>
+          <TabsTrigger value="members">Miembros</TabsTrigger>
+          <TabsTrigger value="invitations">Invitaciones</TabsTrigger>
+        </TabsList>
+        <TabsContent value="members" className="space-y-6">
 
       {/* Owners */}
       {owners.length > 0 && (
@@ -171,6 +192,11 @@ export function ClubStaffManagement() {
           </CardContent>
         </Card>
       )}
+        </TabsContent>
+        <TabsContent value="invitations">
+          <InvitationsHistory clubId={club?.id || ""} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -210,7 +210,8 @@ export default function SignupPage() {
         } else if (redirect) {
           router.push(redirect);
         } else {
-          router.push("/");
+          // New users should select their role first
+          router.push("/select-role");
         }
         router.refresh();
       }, 2000);
