@@ -7,7 +7,7 @@ import { ScoreDisplay } from '@/components/match/score-display'
 import { TrendingUp, TrendingDown, MapPin, Calendar } from 'lucide-react'
 import { useCurrentPlayer, usePlayerMatches, type MatchWithPlayers } from '@/lib/react-query/hooks'
 import { PadelBallLoader } from '@/components/ui/padel-ball-loader'
-import type { EloChanges } from '@/types/database'
+import type { EloChanges, SetScore } from '@/types/database'
 import { useMemo } from 'react'
 
 function MatchesListContent() {
@@ -76,7 +76,7 @@ function MatchesListContent() {
               const won = (isTeam1 && match.winner_team === 1) || (!isTeam1 && match.winner_team === 2)
               
               const eloKey = `player_${userPosition}` as 'player_1' | 'player_2' | 'player_3' | 'player_4'
-              const eloChange = match.elo_changes?.[eloKey]?.change || 0
+              const eloChange = (match.elo_changes as EloChanges | null)?.[eloKey as keyof EloChanges]?.change || 0
 
               return (
                 <Link key={match.id} href={`/matches/${match.id}`} className="block">
@@ -135,8 +135,8 @@ function MatchesListContent() {
                           </div>
 
                           <ScoreDisplay
-                            sets={match.score_sets}
-                            winnerTeam={match.winner_team}
+                            sets={(match.score_sets as unknown) as SetScore[]}
+                            winnerTeam={match.winner_team as 1 | 2}
                             compact
                           />
 

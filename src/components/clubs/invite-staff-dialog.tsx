@@ -21,6 +21,7 @@ import {
 import { CLUB_ROLE_LABELS, type ClubRole } from "@/types/database";
 import { createClient } from "@/lib/supabase/client";
 import { clubStaffKeys } from "@/lib/react-query/hooks/use-club-staff";
+import { clubInvitationsKeys } from "@/lib/react-query/hooks/use-club-invitations";
 import { useMyClubAsOwner } from "@/lib/react-query/hooks/use-clubs";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Mail, UserPlus } from "lucide-react";

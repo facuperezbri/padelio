@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EloBadge } from "@/components/ui/elo-badge";
 import { PlayerAvatar } from "@/components/ui/player-avatar";
 import { useProfile } from "@/lib/react-query/hooks";
+import type { PlayerCategory } from "@/types/database";
 
 export function ProfileSummary() {
   const { data: profileData, isLoading } = useProfile();
@@ -49,7 +50,7 @@ export function ProfileSummary() {
             <div className="mt-2">
               <EloBadge
                 elo={profile?.elo_score || 1400}
-                category={profile?.category_label}
+                category={(profile?.category_label as PlayerCategory) || undefined}
                 size="lg"
               />
             </div>

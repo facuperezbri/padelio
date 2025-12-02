@@ -1,13 +1,9 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import type { ClubMembership, Profile } from "@/types/database";
+import type { ClubMemberWithProfile } from "@/types/database";
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_STALE_TIME } from "@/lib/constants";
-
-export interface ClubMemberWithProfile extends ClubMembership {
-  profile: Profile;
-}
 
 export const clubStaffKeys = {
   all: ["club-staff"] as const,

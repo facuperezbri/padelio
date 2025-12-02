@@ -12,10 +12,8 @@ import {
 } from "@/components/ui/select";
 import { PadelBallLoader } from "@/components/ui/padel-ball-loader";
 import { useMyClubAsOwner } from "@/lib/react-query/hooks/use-clubs";
-import {
-  useClubStaff,
-  type ClubMemberWithProfile,
-} from "@/lib/react-query/hooks/use-club-staff";
+import { useClubStaff } from "@/lib/react-query/hooks/use-club-staff";
+import type { ClubMemberWithProfile } from "@/types/database";
 import {
   useRemoveMember,
   useUpdateMemberRole,
@@ -32,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 const ROLE_COLORS: Record<ClubRole, string> = {
   owner: "bg-purple-500",
   admin: "bg-blue-500",
+  staff: "bg-green-500",
   member: "bg-gray-500",
 };
 
@@ -277,9 +276,9 @@ function StaffMemberCard({
             ) : (
               <Badge
                 variant="secondary"
-                className={`${ROLE_COLORS[member.role]} text-white`}
+                className={`${ROLE_COLORS[member.role as ClubRole]} text-white`}
               >
-                {CLUB_ROLE_LABELS[member.role]}
+                {CLUB_ROLE_LABELS[member.role as ClubRole]}
               </Badge>
             )}
           </div>

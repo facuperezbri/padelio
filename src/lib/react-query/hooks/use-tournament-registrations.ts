@@ -1,14 +1,9 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import type { TournamentRegistration, Player } from "@/types/database";
+import type { TournamentRegistrationWithPlayers } from "@/types/database";
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_STALE_TIME } from "@/lib/constants";
-
-export interface TournamentRegistrationWithPlayers extends TournamentRegistration {
-  player_1: Player;
-  player_2: Player;
-}
 
 export const tournamentRegistrationKeys = {
   all: ["tournament-registrations"] as const,

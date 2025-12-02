@@ -38,7 +38,7 @@ import {
   validateMatch,
 } from "@/lib/padel-rules";
 import { createClient } from "@/lib/supabase/client";
-import type { MatchConfig, MatchInvitation, SetScore } from "@/types/database";
+import type { MatchConfig, MatchInvitation, SetScore, PlayerCategory } from "@/types/database";
 import { DEFAULT_MATCH_CONFIG } from "@/types/database";
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, Loader2, Trophy } from "lucide-react";
@@ -967,7 +967,7 @@ export default function NewMatchPage() {
                     </div>
                     <EloBadge
                       elo={currentUser.elo_score}
-                      category={currentUser.category_label}
+                      category={(currentUser.category_label as PlayerCategory) || undefined}
                       size="sm"
                     />
                   </>

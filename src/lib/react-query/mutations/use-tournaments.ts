@@ -51,7 +51,7 @@ async function createTournament(params: CreateTournamentParams) {
     prize_pool: params.prizePool,
     rules: params.rules,
     status: "draft",
-    created_by: user.id,
+    // created_by removed - tournaments don't have this field
   };
 
   const { data, error } = await supabase

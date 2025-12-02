@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PadelBallLoader } from "@/components/ui/padel-ball-loader";
 import { useClubInvitations } from "@/lib/react-query/hooks/use-club-invitations";
-import { CLUB_ROLE_LABELS } from "@/types/database";
+import { CLUB_ROLE_LABELS, type ClubRole } from "@/types/database";
 import {
   CheckCircle,
   Clock,
@@ -108,7 +108,7 @@ export function InvitationsHistory({ clubId }: InvitationsHistoryProps) {
 }
 
 function InvitationCard({ invitation }: { invitation: any }) {
-  const StatusIcon = STATUS_ICONS[invitation.status];
+  const StatusIcon = STATUS_ICONS[invitation.status as keyof typeof STATUS_ICONS];
   const isExpired =
     invitation.status === "pending" &&
     new Date(invitation.expires_at) < new Date();
@@ -126,14 +126,14 @@ function InvitationCard({ invitation }: { invitation: any }) {
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <Badge
                 variant="secondary"
-                className={`${STATUS_COLORS[invitation.status]} text-white`}
+                className={`${STATUS_COLORS[invitation.status as keyof typeof STATUS_COLORS]} text-white`}
               >
                 <StatusIcon className="mr-1 h-3 w-3" />
-                {STATUS_LABELS[invitation.status]}
+                {STATUS_LABELS[invitation.status as keyof typeof STATUS_LABELS]}
               </Badge>
 
               <Badge variant="outline">
-                {CLUB_ROLE_LABELS[invitation.role]}
+                {CLUB_ROLE_LABELS[invitation.role as ClubRole]}
               </Badge>
 
               {invitation.status === "pending" && (

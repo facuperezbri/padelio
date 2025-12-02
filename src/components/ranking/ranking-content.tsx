@@ -60,7 +60,7 @@ export function RankingContent({ rankings, currentUserId }: RankingContentProps)
                 <div className="flex items-center gap-2">
                   <EloBadge
                     elo={userRank.elo_score}
-                    category={userRank.category_label}
+                    category={(userRank.category_label as PlayerCategory) || undefined}
                     size="lg"
                   />
                   <span className="text-sm text-muted-foreground">
@@ -118,7 +118,7 @@ export function RankingContent({ rankings, currentUserId }: RankingContentProps)
                 name={player.full_name || player.username || 'Usuario'}
                 avatarUrl={player.avatar_url}
                 elo={player.elo_score}
-                category={player.category_label}
+                category={(player.category_label as PlayerCategory) || undefined}
                 matchesPlayed={player.matches_played}
                 winRate={player.win_rate}
                 isCurrentUser={currentUserId ? player.id === currentUserId : false}
@@ -139,7 +139,7 @@ export function RankingContent({ rankings, currentUserId }: RankingContentProps)
                 name={player.full_name || player.username || 'Usuario'}
                 avatarUrl={player.avatar_url}
                 elo={player.elo_score}
-                category={player.category_label}
+                category={(player.category_label as PlayerCategory) || undefined}
                 matchesPlayed={player.matches_played}
                 winRate={player.win_rate}
                 isCurrentUser={currentUserId ? player.id === currentUserId : false}

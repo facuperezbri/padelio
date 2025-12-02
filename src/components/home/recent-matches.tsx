@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlayerAvatar } from "@/components/ui/player-avatar";
 import { PadelBallLoader } from "@/components/ui/padel-ball-loader";
 import { useCurrentPlayer, usePlayerMatches } from "@/lib/react-query/hooks";
+import type { EloChanges } from "@/types/database";
 import { TrendingDown, Trophy } from "lucide-react";
 import Link from "next/link";
 
@@ -76,7 +77,7 @@ export function RecentMatches() {
 
             // Get ELO change
             const eloKey = `player_${playerPosition}` as const;
-            const eloChange = match.elo_changes?.[eloKey]?.change || 0;
+            const eloChange = (match.elo_changes as EloChanges | null)?.[eloKey as keyof EloChanges]?.change || 0;
 
             return (
               <Link

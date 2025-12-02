@@ -24,6 +24,7 @@ import { fuzzySearch } from "@/lib/utils";
 import { Plus, UserPlus, X } from "lucide-react";
 import { useState } from "react";
 import type { PlayerPosition, SelectedPlayer } from "./types";
+import type { PlayerCategory } from "@/types/database";
 
 export interface PlayerSlotProps {
   player: SelectedPlayer | null;
@@ -83,7 +84,7 @@ export function PlayerSlot({
         </div>
         <EloBadge
           elo={player.elo_score}
-          category={player.category_label}
+          category={(player.category_label as PlayerCategory) || undefined}
           size="sm"
         />
         <Button variant="ghost" size="icon" onClick={() => onRemove(position)}>
@@ -190,7 +191,7 @@ export function PlayerSlot({
                         </div>
                         <EloBadge
                           elo={p.elo_score}
-                          category={p.category_label}
+                          category={(p.category_label as PlayerCategory) || undefined}
                           size="sm"
                         />
                       </CommandItem>

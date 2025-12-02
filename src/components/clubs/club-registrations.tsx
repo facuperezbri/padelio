@@ -13,10 +13,8 @@ import {
 } from "@/components/ui/select";
 import { useMyClubAsOwner } from "@/lib/react-query/hooks/use-clubs";
 import { useTournamentsByClub } from "@/lib/react-query/hooks/use-tournaments";
-import {
-  useTournamentRegistrations,
-  type TournamentRegistrationWithPlayers,
-} from "@/lib/react-query/hooks/use-tournament-registrations";
+import { useTournamentRegistrations } from "@/lib/react-query/hooks/use-tournament-registrations";
+import type { TournamentRegistrationWithPlayers } from "@/types/database";
 import {
   useMarkPayment,
   useUpdateRegistrationStatus,
@@ -212,9 +210,9 @@ function RegistrationCard({
           </div>
           <Badge
             variant="secondary"
-            className={`${STATUS_COLORS[registration.status]} text-white shrink-0`}
+            className={`${STATUS_COLORS[registration.status as RegistrationStatus]} text-white shrink-0`}
           >
-            {REGISTRATION_STATUS_LABELS[registration.status]}
+            {REGISTRATION_STATUS_LABELS[registration.status as RegistrationStatus]}
           </Badge>
         </div>
 

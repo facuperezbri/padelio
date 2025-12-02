@@ -33,7 +33,7 @@ import {
   getProvincesByCountry,
 } from "@/lib/countries";
 import { createClient } from "@/lib/supabase/client";
-import type { Player, Profile } from "@/types/database";
+import type { Player, Profile, PlayerCategory } from "@/types/database";
 import {
   Check,
   Ghost,
@@ -298,7 +298,7 @@ export function ProfileForm({
                   <div className="mt-3">
                     <EloBadge
                       elo={profile.elo_score || 1400}
-                      category={profile.category_label}
+                      category={(profile.category_label as PlayerCategory) || undefined}
                       size="lg"
                     />
                   </div>
@@ -505,7 +505,7 @@ export function ProfileForm({
                   </div>
                   <EloBadge
                     elo={ghost.elo_score}
-                    category={ghost.category_label}
+                    category={(ghost.category_label as PlayerCategory) || undefined}
                     size="sm"
                   />
                   <div className="flex gap-1">

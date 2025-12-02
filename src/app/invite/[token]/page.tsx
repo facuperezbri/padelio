@@ -12,7 +12,7 @@ import {
 import { PadelBallLoader } from "@/components/ui/padel-ball-loader";
 import { PlayerAvatar } from "@/components/ui/player-avatar";
 import { createClient } from "@/lib/supabase/client";
-import type { InvitationDetails } from "@/types/database";
+import type { InvitationDetails, PlayerCategory } from "@/types/database";
 import {
   Calendar,
   CheckCircle,
@@ -227,7 +227,7 @@ export default function InvitePage({ params }: InvitePageProps) {
     );
   }
 
-  const matchDateTime = new Date(invitation.match_date);
+  const matchDateTime = new Date(invitation.match_date!);
   const dateStr = matchDateTime.toLocaleDateString("es-AR", {
     weekday: "long",
     day: "numeric",
@@ -279,7 +279,7 @@ export default function InvitePage({ params }: InvitePageProps) {
               Jugadores
             </p>
             <div className="grid grid-cols-2 gap-2">
-              {invitation.player_names.map((name, index) => (
+              {invitation.player_names?.map((name, index) => (
                 <div
                   key={index}
                   className="flex items-center gap-2 rounded-lg bg-muted/30 p-2"

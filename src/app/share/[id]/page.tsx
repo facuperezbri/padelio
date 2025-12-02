@@ -29,7 +29,7 @@ import { PadelBallLoader } from "@/components/ui/padel-ball-loader";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { use, useEffect, useState } from "react";
-import type { SetScore, Player, MatchConfig } from "@/types/database";
+import type { SetScore, Player, MatchConfig, PlayerCategory } from "@/types/database";
 
 interface ShareMatchPageProps {
   params: Promise<{ id: string }>;
@@ -402,7 +402,7 @@ export default function ShareMatchPage({ params }: ShareMatchPageProps) {
                     </div>
                     <EloBadge
                       elo={player.elo_score}
-                      category={player.category_label}
+                      category={(player.category_label as PlayerCategory) || undefined}
                       size="sm"
                     />
                   </div>

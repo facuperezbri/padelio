@@ -27,7 +27,7 @@ import {
   validateMatch,
 } from "@/lib/padel-rules";
 import { createClient } from "@/lib/supabase/client";
-import type { Match, MatchConfig, Player, SetScore } from "@/types/database";
+import type { Match, MatchConfig, Player, SetScore, PlayerCategory } from "@/types/database";
 import { DEFAULT_MATCH_CONFIG } from "@/types/database";
 import { AlertTriangle, Check, Loader2, Trash2, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -37,7 +37,9 @@ interface EditMatchPageProps {
   params: Promise<{ id: string }>;
 }
 
-interface MatchWithPlayers extends Match {
+interface MatchWithPlayers extends Omit<Match, "score_sets" | "match_config"> {
+  score_sets: SetScore[];
+  match_config: MatchConfig | null;
   player_1: Player;
   player_2: Player;
   player_3: Player;
@@ -213,8 +215,8 @@ export default function EditMatchPage({ params }: EditMatchPageProps) {
     setMatchTime(roundTimeToNearestHalfHour(timeString)); // HH:mm format rounded to 00 or 30
 
     setSets(fullMatch.score_sets);
-    setWinnerTeam(fullMatch.winner_team);
-    setMatchConfig(fullMatch.match_config);
+    setWinnerTeam(fullMatch.winner_team as 1 | 2);
+    setMatchConfig(fullMatch.match_config || DEFAULT_MATCH_CONFIG);
 
     // Initialize input values
     setSetInputValues(
@@ -991,7 +993,7 @@ function PlayerRow({ player }: { player: Player }) {
       </div>
       <EloBadge
         elo={player.elo_score}
-        category={player.category_label}
+        category={(player.category_label as PlayerCategory) || undefined}
         size="sm"
       />
     </div>

@@ -66,15 +66,15 @@ export function EditTournamentForm({ tournamentId }: EditTournamentFormProps) {
         startDate: tournament.start_date,
         endDate: tournament.end_date || "",
         registrationDeadline: tournament.registration_deadline || "",
-        format: tournament.format,
+        format: tournament.format as TournamentFormat,
         maxTeams: tournament.max_teams?.toString() || "",
         minTeams: tournament.min_teams.toString(),
-        categoryLabel: tournament.category_label || "",
-        gender: tournament.gender || "",
+        categoryLabel: (tournament.category_label as PlayerCategory) || "",
+        gender: (tournament.gender as "Masculino" | "Femenino" | "Mixto") || "",
         entryFee: tournament.entry_fee?.toString() || "",
         prizePool: tournament.prize_pool || "",
         rules: tournament.rules || "",
-        status: tournament.status,
+        status: tournament.status as TournamentStatus,
       });
     }
   }, [tournament]);
