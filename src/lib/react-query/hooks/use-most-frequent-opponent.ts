@@ -26,7 +26,7 @@ export function useMostFrequentOpponent(currentPlayerId: string | null) {
         .order('match_date', { ascending: false })
         .limit(50) // Limit to recent matches for performance
 
-      if (!matches || matches.length === 0)
+      if (!matches || matches.length === 0) {
         return null
       }
 
