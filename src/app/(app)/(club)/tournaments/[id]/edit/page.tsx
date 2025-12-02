@@ -1,0 +1,42 @@
+import { Header } from "@/components/layout/header";
+import { EditTournamentForm } from "@/components/clubs/edit-tournament-form";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+
+interface EditTournamentPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function EditTournamentPage({ params }: EditTournamentPageProps) {
+  const { id } = await params;
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  // Check if user is a club type
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("user_type")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.user_type !== "club") {
+    redirect("/");
+  }
+
+  return (
+    <>
+      <Header title="Editar Torneo" showBack />
+      <div className="p-4">
+        <EditTournamentForm tournamentId={id} />
+      </div>
+    </>
+  );
+}
+
