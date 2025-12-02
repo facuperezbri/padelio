@@ -8,6 +8,27 @@ export type PlayerCategory =
   | "2da"
   | "1ra";
 
+export type ClubRole = "owner" | "admin" | "member";
+
+export type TournamentStatus =
+  | "draft"
+  | "open"
+  | "in_progress"
+  | "finished"
+  | "cancelled";
+
+export type TournamentFormat =
+  | "single_elimination"
+  | "double_elimination"
+  | "round_robin"
+  | "groups_knockout";
+
+export type RegistrationStatus =
+  | "pending"
+  | "confirmed"
+  | "waitlist"
+  | "cancelled";
+
 export type Json =
   | string
   | number
@@ -271,6 +292,215 @@ export interface Database {
           created_at?: string;
         };
       };
+      clubs: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          logo_url: string | null;
+          cover_image_url: string | null;
+          address: string | null;
+          city: string | null;
+          province: string | null;
+          country: string;
+          phone: string | null;
+          email: string | null;
+          website: string | null;
+          instagram: string | null;
+          is_public: boolean;
+          requires_approval: boolean;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          logo_url?: string | null;
+          cover_image_url?: string | null;
+          address?: string | null;
+          city?: string | null;
+          province?: string | null;
+          country?: string;
+          phone?: string | null;
+          email?: string | null;
+          website?: string | null;
+          instagram?: string | null;
+          is_public?: boolean;
+          requires_approval?: boolean;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          description?: string | null;
+          logo_url?: string | null;
+          cover_image_url?: string | null;
+          address?: string | null;
+          city?: string | null;
+          province?: string | null;
+          country?: string;
+          phone?: string | null;
+          email?: string | null;
+          website?: string | null;
+          instagram?: string | null;
+          is_public?: boolean;
+          requires_approval?: boolean;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      club_memberships: {
+        Row: {
+          id: string;
+          club_id: string;
+          profile_id: string;
+          role: ClubRole;
+          nickname: string | null;
+          jersey_number: number | null;
+          is_active: boolean;
+          joined_at: string;
+        };
+        Insert: {
+          id?: string;
+          club_id: string;
+          profile_id: string;
+          role?: ClubRole;
+          nickname?: string | null;
+          jersey_number?: number | null;
+          is_active?: boolean;
+          joined_at?: string;
+        };
+        Update: {
+          id?: string;
+          club_id?: string;
+          profile_id?: string;
+          role?: ClubRole;
+          nickname?: string | null;
+          jersey_number?: number | null;
+          is_active?: boolean;
+          joined_at?: string;
+        };
+      };
+      tournaments: {
+        Row: {
+          id: string;
+          club_id: string | null;
+          name: string;
+          slug: string;
+          description: string | null;
+          rules: string | null;
+          start_date: string;
+          end_date: string | null;
+          registration_deadline: string | null;
+          format: TournamentFormat;
+          max_teams: number | null;
+          min_teams: number;
+          category_label: PlayerCategory | null;
+          gender: "Masculino" | "Femenino" | "Mixto" | null;
+          entry_fee: number | null;
+          prize_pool: string | null;
+          status: TournamentStatus;
+          banner_url: string | null;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          club_id?: string | null;
+          name: string;
+          slug: string;
+          description?: string | null;
+          rules?: string | null;
+          start_date: string;
+          end_date?: string | null;
+          registration_deadline?: string | null;
+          format?: TournamentFormat;
+          max_teams?: number | null;
+          min_teams?: number;
+          category_label?: PlayerCategory | null;
+          gender?: "Masculino" | "Femenino" | "Mixto" | null;
+          entry_fee?: number | null;
+          prize_pool?: string | null;
+          status?: TournamentStatus;
+          banner_url?: string | null;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          club_id?: string | null;
+          name?: string;
+          slug?: string;
+          description?: string | null;
+          rules?: string | null;
+          start_date?: string;
+          end_date?: string | null;
+          registration_deadline?: string | null;
+          format?: TournamentFormat;
+          max_teams?: number | null;
+          min_teams?: number;
+          category_label?: PlayerCategory | null;
+          gender?: "Masculino" | "Femenino" | "Mixto" | null;
+          entry_fee?: number | null;
+          prize_pool?: string | null;
+          status?: TournamentStatus;
+          banner_url?: string | null;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      tournament_registrations: {
+        Row: {
+          id: string;
+          tournament_id: string;
+          player_1_id: string;
+          player_2_id: string;
+          team_name: string | null;
+          seed: number | null;
+          status: RegistrationStatus;
+          paid: boolean;
+          paid_at: string | null;
+          registered_by: string;
+          registered_at: string;
+        };
+        Insert: {
+          id?: string;
+          tournament_id: string;
+          player_1_id: string;
+          player_2_id: string;
+          team_name?: string | null;
+          seed?: number | null;
+          status?: RegistrationStatus;
+          paid?: boolean;
+          paid_at?: string | null;
+          registered_by: string;
+          registered_at?: string;
+        };
+        Update: {
+          id?: string;
+          tournament_id?: string;
+          player_1_id?: string;
+          player_2_id?: string;
+          team_name?: string | null;
+          seed?: number | null;
+          status?: RegistrationStatus;
+          paid?: boolean;
+          paid_at?: string | null;
+          registered_by?: string;
+          registered_at?: string;
+        };
+      };
     };
     Views: {
       global_ranking: {
@@ -300,6 +530,42 @@ export interface Database {
           matches_played: number;
           matches_won: number;
           win_rate: number;
+        };
+      };
+      club_summary: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          logo_url: string | null;
+          cover_image_url: string | null;
+          city: string | null;
+          province: string | null;
+          country: string;
+          is_public: boolean;
+          member_count: number;
+          tournament_count: number;
+          created_at: string;
+        };
+      };
+      tournament_summary: {
+        Row: {
+          id: string;
+          club_id: string | null;
+          name: string;
+          slug: string;
+          description: string | null;
+          start_date: string;
+          end_date: string | null;
+          format: TournamentFormat;
+          category_label: PlayerCategory | null;
+          gender: "Masculino" | "Femenino" | "Mixto" | null;
+          status: TournamentStatus;
+          banner_url: string | null;
+          club_name: string | null;
+          club_slug: string | null;
+          registration_count: number;
         };
       };
     };
@@ -365,9 +631,24 @@ export interface Database {
         };
         Returns: Json;
       };
+      create_club_with_owner: {
+        Args: {
+          p_name: string;
+          p_slug: string;
+          p_description?: string;
+          p_city?: string;
+          p_province?: string;
+          p_is_public?: boolean;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       player_category: PlayerCategory;
+      club_role: ClubRole;
+      tournament_status: TournamentStatus;
+      tournament_format: TournamentFormat;
+      registration_status: RegistrationStatus;
     };
   };
 }
@@ -464,6 +745,37 @@ export type GlobalRanking =
   Database["public"]["Views"]["global_ranking"]["Row"];
 export type PlayerStats = Database["public"]["Views"]["player_stats"]["Row"];
 
+// Club types
+export type Club = Database["public"]["Tables"]["clubs"]["Row"];
+export type ClubInsert = Database["public"]["Tables"]["clubs"]["Insert"];
+export type ClubUpdate = Database["public"]["Tables"]["clubs"]["Update"];
+
+export type ClubMembership =
+  Database["public"]["Tables"]["club_memberships"]["Row"];
+export type ClubMembershipInsert =
+  Database["public"]["Tables"]["club_memberships"]["Insert"];
+export type ClubMembershipUpdate =
+  Database["public"]["Tables"]["club_memberships"]["Update"];
+
+export type ClubSummary = Database["public"]["Views"]["club_summary"]["Row"];
+
+// Tournament types
+export type Tournament = Database["public"]["Tables"]["tournaments"]["Row"];
+export type TournamentInsert =
+  Database["public"]["Tables"]["tournaments"]["Insert"];
+export type TournamentUpdate =
+  Database["public"]["Tables"]["tournaments"]["Update"];
+
+export type TournamentRegistration =
+  Database["public"]["Tables"]["tournament_registrations"]["Row"];
+export type TournamentRegistrationInsert =
+  Database["public"]["Tables"]["tournament_registrations"]["Insert"];
+export type TournamentRegistrationUpdate =
+  Database["public"]["Tables"]["tournament_registrations"]["Update"];
+
+export type TournamentSummary =
+  Database["public"]["Views"]["tournament_summary"]["Row"];
+
 // Match with player details (for display)
 export interface MatchWithPlayers extends Match {
   player_1: Player;
@@ -510,4 +822,36 @@ export const CATEGORIES: PlayerCategory[] = [
 export const DEFAULT_MATCH_CONFIG: MatchConfig = {
   goldenPoint: true,
   superTiebreak: false,
+};
+
+// Tournament status labels
+export const TOURNAMENT_STATUS_LABELS: Record<TournamentStatus, string> = {
+  draft: "Borrador",
+  open: "Inscripciones Abiertas",
+  in_progress: "En Curso",
+  finished: "Finalizado",
+  cancelled: "Cancelado",
+};
+
+// Tournament format labels
+export const TOURNAMENT_FORMAT_LABELS: Record<TournamentFormat, string> = {
+  single_elimination: "Eliminación Simple",
+  double_elimination: "Eliminación Doble",
+  round_robin: "Todos contra Todos",
+  groups_knockout: "Grupos + Eliminatorias",
+};
+
+// Club role labels
+export const CLUB_ROLE_LABELS: Record<ClubRole, string> = {
+  owner: "Propietario",
+  admin: "Administrador",
+  member: "Miembro",
+};
+
+// Registration status labels
+export const REGISTRATION_STATUS_LABELS: Record<RegistrationStatus, string> = {
+  pending: "Pendiente",
+  confirmed: "Confirmada",
+  waitlist: "Lista de Espera",
+  cancelled: "Cancelada",
 };

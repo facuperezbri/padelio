@@ -20,6 +20,14 @@ A modern Progressive Web App (PWA) for tracking padel matches, calculating ELO r
 - **WhatsApp Integration**: Share match results and invitations directly through WhatsApp
 - **Player Management**: Create and manage ghost players for casual matches
 
+### Clubs & Tournaments (Coming Soon 🚧)
+
+- **Clubs**: Create and manage padel clubs with members
+- **Club Memberships**: Owner, Admin, and Member roles
+- **Tournaments**: Create tournaments with various formats
+- **Tournament Formats**: Single/Double Elimination, Round Robin, Groups + Knockout
+- **Registrations**: Team-based registration system with waitlist support
+
 ### User Experience
 
 - **Progressive Web App**: Installable on mobile devices with offline support
@@ -130,16 +138,21 @@ vibo/
 ├── src/
 │   ├── app/              # Next.js App Router pages
 │   │   ├── (app)/        # Protected app routes
+│   │   │   ├── clubs/    # Club pages
+│   │   │   └── tournaments/ # Tournament pages
 │   │   ├── (auth)/       # Authentication routes
 │   │   └── invite/       # Match invitation routes
 │   ├── components/       # React components
 │   │   ├── auth/         # Authentication components
+│   │   ├── clubs/        # Club-related components
 │   │   ├── home/         # Home page components
 │   │   ├── layout/       # Layout components
 │   │   ├── match/        # Match-related components
 │   │   ├── profile/      # Profile components
+│   │   ├── tournaments/  # Tournament-related components
 │   │   └── ui/           # Reusable UI components
 │   ├── lib/              # Utility functions
+│   │   ├── react-query/  # TanStack Query hooks
 │   │   └── supabase/     # Supabase client configuration
 │   └── types/            # TypeScript type definitions
 ├── supabase/
@@ -222,6 +235,14 @@ Una aplicación web progresiva (PWA) moderna para rastrear partidos de pádel, c
 - **Invitaciones a Partidos**: Invita jugadores a confirmar partidos mediante enlaces compartibles
 - **Integración con WhatsApp**: Comparte resultados de partidos e invitaciones directamente a través de WhatsApp
 - **Gestión de Jugadores**: Crea y gestiona jugadores fantasma para partidos casuales
+
+### Clubes y Torneos (Próximamente 🚧)
+
+- **Clubes**: Crea y gestiona clubes de pádel con miembros
+- **Membresías**: Roles de Propietario, Administrador y Miembro
+- **Torneos**: Crea torneos con varios formatos
+- **Formatos de Torneo**: Eliminación Simple/Doble, Todos contra Todos, Grupos + Eliminatorias
+- **Inscripciones**: Sistema de inscripción por equipos con lista de espera
 
 ### Experiencia de Usuario
 
@@ -333,16 +354,21 @@ vibo/
 ├── src/
 │   ├── app/              # Páginas del App Router de Next.js
 │   │   ├── (app)/        # Rutas protegidas de la app
+│   │   │   ├── clubs/    # Páginas de clubes
+│   │   │   └── tournaments/ # Páginas de torneos
 │   │   ├── (auth)/       # Rutas de autenticación
 │   │   └── invite/       # Rutas de invitación a partidos
 │   ├── components/       # Componentes React
 │   │   ├── auth/         # Componentes de autenticación
+│   │   ├── clubs/        # Componentes de clubes
 │   │   ├── home/         # Componentes de la página de inicio
 │   │   ├── layout/       # Componentes de diseño
 │   │   ├── match/        # Componentes relacionados con partidos
 │   │   ├── profile/      # Componentes de perfil
+│   │   ├── tournaments/  # Componentes de torneos
 │   │   └── ui/           # Componentes UI reutilizables
 │   ├── lib/              # Funciones de utilidad
+│   │   ├── react-query/  # Hooks de TanStack Query
 │   │   └── supabase/     # Configuración del cliente Supabase
 │   └── types/            # Definiciones de tipos TypeScript
 ├── supabase/
