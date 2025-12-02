@@ -107,3 +107,41 @@ export function useMyClubs(userId: string | undefined) {
   });
 }
 
+async function fetchMyClubAsOwner(userId: string): Promise<ClubSummary | null> {
+  const supabase = createClient();
+
+  // Get club where user is owner
+  const { data: membership, error: membershipError } = await supabase
+    .from("club_memberships")
+    .select("club_id")
+    .eq("profile_id", userId)
+    .eq("role", "owner")
+    .eq("is_active", true)
+    .single();
+
+  if (membershipError || !membership) {
+    return null;
+  }
+
+  const { data: club, error: clubError } = await supabase
+    .from("club_summary")
+    .select("*")
+    .eq("id", membership.club_id)
+    .single();
+
+  if (clubError) {
+    throw new Error(clubError.message);
+  }
+
+  return club;
+}
+
+export function useMyClubAsOwner(userId: string | undefined) {
+  return useQuery({
+    queryKey: [...clubKeys.all, "my-club-as-owner", userId || ""],
+    queryFn: () => fetchMyClubAsOwner(userId!),
+    staleTime: QUERY_STALE_TIME,
+    enabled: Boolean(userId),
+  });
+}
+
