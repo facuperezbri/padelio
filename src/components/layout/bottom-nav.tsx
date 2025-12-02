@@ -71,8 +71,8 @@ export function BottomNav() {
   );
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/80 backdrop-blur-lg safe-area-inset-bottom">
-      <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/80 backdrop-blur-lg pb-[env(safe-area-inset-bottom)]">
+      <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-2 pt-1">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
